@@ -673,12 +673,12 @@ begin
 
   (* search code template in current directory, then on path where Lex
      was executed from: *)
-  codfilename := 'yylex.cod';
+  codfilename := codfilepath + 'yylex.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'yylex.cod';
+      codfilename := codfilepath+'..\..\yylex.cod';
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);

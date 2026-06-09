@@ -1,3 +1,4 @@
 {$APPTYPE CONSOLE}
 
 {$I LEX.PAS}
+

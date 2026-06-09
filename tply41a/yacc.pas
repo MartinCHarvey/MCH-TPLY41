@@ -2452,12 +2452,12 @@ begin
 
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
-  codfilename := 'yyparse.cod';
+  codfilename := codfilepath + 'yyparse.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'yyparse.cod';
+      codfilename := codfilepath+'..\..\yyparse.cod';
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
