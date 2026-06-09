@@ -1,0 +1,5 @@
+
+{$APPTYPE CONSOLE}
+
+{$I YACC.PAS}
+
