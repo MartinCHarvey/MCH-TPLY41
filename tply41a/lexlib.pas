@@ -51,8 +51,7 @@ yyinput, yyoutput : Text;        (* input and output file *)
 yyline            : ModeratelyLargeString;      (* current input line *)
 yylineno, yycolno : Integer;     (* current input position *)
 yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
-yyleng            : Word         (* length of matched text *)
-  absolute yytext;
+yyleng            : Word;         (* length of matched text *)
 
 (* I/O routines:
 
@@ -290,6 +289,7 @@ procedure echo;
 procedure yymore;
   begin
     yystext := yytext;
+    yysleng := yyleng;
   end(*yymore*);
 
 procedure yyless ( n : Integer );
@@ -346,7 +346,10 @@ procedure yynew;
         yylstate := 0;
     yystate := yysstate+yylstate;
     yytext  := yystext;
+    yyleng  := yysleng;
+
     FillChar(yystext, 0, sizeof(yystext));
+    yysleng := 0;
     yymatches := 0;
     yydone := false;
   end(*yynew*);
@@ -422,6 +425,8 @@ procedure yyclear;
     yylastchar := #0;
     FillChar(yytext, sizeof(yytext), 0);
     yystext := yytext;
+    yyleng := 0;
+    yysleng := 0;
   end(*yyclear*);
 
 begin
