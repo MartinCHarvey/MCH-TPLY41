@@ -174,7 +174,7 @@ procedure generate_table;
      Tables are represented as a collection of typed array constants:
 
      type YYTRec = record
-                     cc : set of Char; { characters }
+                     cc : set of AnsiChar; { characters }
                      s  : Integer;     { next state }
                    end;
 
@@ -296,7 +296,7 @@ procedure generate_table;
     begin
       writeln(yyout);
       writeln(yyout, 'type YYTRec = record');
-      writeln(yyout, '                cc : set of Char;');
+      writeln(yyout, '                cc : set of AnsiChar;');
       writeln(yyout, '                s  : Integer;');
       writeln(yyout, '              end;');
       writeln(yyout);
@@ -686,24 +686,27 @@ begin
 
   (* parse source grammar: *)
 
-  write('parse ... ');
+  writeln('parse ... ');
   lno := 0; n_rules := 0; next_section;
   first_pos_table^[0] := newIntSet;
   first_pos_table^[1] := newIntSet;
+  writeln('parse definitions ...');
   definitions;
+  writeln('parse rules...');
   rules;
+  writeln('done parsing.');
   if n_rules=0 then error(empty_grammar, length(line)+1);
   if errors=0 then
     begin
       (* generate DFA table and listings and write output code: *)
-      write('DFA construction ... ');
+      writeln('DFA construction ... ');
       makeDFATable;
       if optimize then
         begin
-          write('DFA optimization ... ');
+          writeln('DFA optimization ... ');
           optimizeDFATable;
         end;
-      write('code generation ... ');
+      writeln('code generation ... ');
       if verbose then listDFATable;
       generate_table; next_section;
     end;
