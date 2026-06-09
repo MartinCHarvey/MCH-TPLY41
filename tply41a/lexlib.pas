@@ -39,13 +39,19 @@ interface
    target application (use the Turbo Pascal standard routines assign,
    reset, and rewrite for this purpose). *)
 
+const
+  BIGGER_STRING_LEN = 4096;
+
+type
+  ModeratelyLargeString = array[1..BIGGER_STRING_LEN] of AnsiChar;
+
 var
 
 yyinput, yyoutput : Text;        (* input and output file *)
-yyline            : String;      (* current input line *)
+yyline            : ModeratelyLargeString;      (* current input line *)
 yylineno, yycolno : Integer;     (* current input position *)
-yytext            : String;      (* matched text (should be considered r/o) *)
-yyleng            : Byte         (* length of matched text *)
+yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
+yyleng            : Word         (* length of matched text *)
   absolute yytext;
 
 (* I/O routines:
@@ -70,15 +76,15 @@ yyleng            : Byte         (* length of matched text *)
    put_char by another suitable set of routines, e.g. if you want to read
    from/write to memory, etc. *)
 
-function get_char : Char;
+function get_char : AnsiChar;
   (* obtain one character from the input file (null character at end-of-
      file) *)
 
-procedure unget_char ( c : Char );
+procedure unget_char ( c : AnsiChar );
   (* return one character to the input file to be reread in subsequent calls
      to get_char *)
 
-procedure put_char ( c : Char );
+procedure put_char ( c : AnsiChar );
   (* write one character to the output file *)
 
 (* Utility routines: *)
@@ -102,7 +108,7 @@ procedure reject;
      when rejecting a match. *)
 
 procedure return ( n : Integer );
-procedure returnc ( c : Char );
+procedure returnc ( c : AnsiChar );
   (* sets the return value of yylex *)
 
 procedure start ( state : Integer );
@@ -127,8 +133,8 @@ function yywrap : Boolean;
 var
 
 yystate    : Integer; (* current state of lexical analyzer *)
-yyactchar  : Char;    (* current character *)
-yylastchar : Char;    (* last matched character (#0 if none) *)
+yyactchar  : AnsiChar;    (* current character *)
+yylastchar : AnsiChar;    (* last matched character (#0 if none) *)
 yyrule     : Integer; (* matched rule *)
 yyreject   : Boolean; (* current match rejected? *)
 yydone     : Boolean; (* yylex return value set? *)
@@ -175,24 +181,41 @@ procedure fatal ( msg : String );
 
 const nl = #10;  (* newline character *)
 
-const max_chars = 2048;
-
 var
 
 bufptr : Integer;
-buf    : array [1..max_chars] of Char;
+buf    : ModeratelyLargeString;
 
-function get_char : Char;
+function get_char : AnsiChar;
   var i : Integer;
+      UniLine: string;
+      SLen: integer;
   begin
     if (bufptr=0) and not eof(yyinput) then
       begin
-        readln(yyinput, yyline);
+        //TODO - Could read a bit less than 4K, we are
+        // getting input char by char after all.
+        //TODO - Do this nicely with buffered memory streams,
+        // and looking for lf chars.
+        readln(yyinput, UniLine);
+        SLen := Length(UniLine);
+        if SLen > BIGGER_STRING_LEN then
+            fatal('Line longer than 4k');
+
+        FillChar(yyline, sizeof(yyline), 0);
+        for i := 1 to SLen do
+        begin
+          if UniLine[i] <= High(AnsiChar) then
+            yyline[i] := AnsiChar(UniLine[i])
+          else
+            fatal('input buffer unicode char (set the code page for yyinput).');
+        end;
+
         inc(yylineno); yycolno := 1;
         buf[1] := nl;
-        for i := 1 to length(yyline) do
-          buf[i+1] := yyline[length(yyline)-i+1];
-        inc(bufptr, length(yyline)+1);
+        for i := 1 to SLen do
+          buf[i+1] := yyline[SLen-i+1];
+        inc(bufptr, SLen+1);
       end;
     if bufptr>0 then
       begin
@@ -204,15 +227,15 @@ function get_char : Char;
       get_char := #0;
   end(*get_char*);
 
-procedure unget_char ( c : Char );
+procedure unget_char ( c : AnsiChar );
   begin
-    if bufptr=max_chars then fatal('input buffer overflow');
+    if bufptr = BIGGER_STRING_LEN then fatal('input buffer overflow');
     inc(bufptr);
     dec(yycolno);
     buf[bufptr] := c;
   end(*unget_char*);
 
-procedure put_char ( c : Char );
+procedure put_char ( c : AnsiChar );
   begin
     if c=#0 then
       { ignore }
@@ -248,12 +271,12 @@ max_rules   = 256;
 
 var
 
-yystext            : String;
+yystext            : ModeratelyLargeString;
 yysstate, yylstate : Integer;
 yymatches          : Integer;
 yystack            : array [1..max_matches] of Integer;
 yypos              : array [1..max_rules] of Integer;
-yysleng            : Byte;
+yysleng            : Word;
 
 (* Utilities: *)
 
@@ -282,7 +305,8 @@ procedure reject;
   begin
     yyreject := true;
     for i := yyleng+1 to yysleng do
-      yytext := yytext+get_char;
+      yytext[i] := get_char;
+    yyleng := yysleng;
     dec(yymatches);
   end(*reject*);
 
@@ -292,7 +316,7 @@ procedure return ( n : Integer );
     yydone := true;
   end(*return*);
 
-procedure returnc ( c : Char );
+procedure returnc ( c : AnsiChar );
   begin
     yyretval := ord(c);
     yydone := true;
@@ -322,14 +346,14 @@ procedure yynew;
         yylstate := 0;
     yystate := yysstate+yylstate;
     yytext  := yystext;
-    yystext := '';
+    FillChar(yystext, 0, sizeof(yystext));
     yymatches := 0;
     yydone := false;
   end(*yynew*);
 
 procedure yyscan;
   begin
-    if yyleng=255 then fatal('yytext overflow');
+    if yyleng= BIGGER_STRING_LEN then fatal('yytext overflow');
     yyactchar := get_char;
     inc(yyleng);
     yytext[yyleng] := yyactchar;
@@ -396,8 +420,8 @@ procedure yyclear;
     yysstate := 0;
     yylstate := 1;
     yylastchar := #0;
-    yytext := '';
-    yystext := '';
+    FillChar(yytext, sizeof(yytext), 0);
+    yystext := yytext;
   end(*yyclear*);
 
 begin

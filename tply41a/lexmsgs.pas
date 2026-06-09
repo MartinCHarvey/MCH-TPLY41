@@ -56,7 +56,7 @@ const
 
 (* sign-on and usage message: *)
 
-sign_on = 'TP Lex Version 4.1a [April 2000], Copyright (c) 1990-2000 Albert Graef';
+sign_on = 'TP Lex Version 4.1a [April 2000], Copyright (c) 1990-2000 Albert Graef - MCH mod 1';
 {$ifdef linux}
 usage   = 'Usage: plex [options] lex-file[.l] [output-file[.pas]]';
 {$else}
