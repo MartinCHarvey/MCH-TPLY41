@@ -85,9 +85,7 @@ type
 
 (* String and character class pointers: *)
 
-  (* Declare string container in a type safe way.
-     old TP string handling totally barfs Delphi strings }
-*)
+  (* Old TP string handling does bad bad things to delphi strings... *)
   StrContainer = record
     S: string;
   end;

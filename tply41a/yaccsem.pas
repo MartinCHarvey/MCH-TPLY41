@@ -172,7 +172,7 @@ function sym ( k : Integer ) : Integer;
   begin
     if is_def_key(k, s) then
       sym := s
-    else if sym_table^[k].pname^[1]='''' then
+    else if sym_table^[k].pname.S[1] = '''' then
       begin
         s := new_lit;
         def_key(k, s);
@@ -197,7 +197,7 @@ function ntsym ( k : Integer ) : Integer;
           error(nonterm_expected);
           ntsym := -1;
         end
-    else if sym_table^[k].pname^[1]='''' then
+    else if sym_table^[k].pname.S[1] = '''' then
       begin
         error(nonterm_expected);
         ntsym := -1;
@@ -224,7 +224,7 @@ function litsym ( k : Integer; n : Integer ) : Integer;
           error(literal_expected);
           litsym := 1;
         end
-    else if sym_table^[k].pname^[1]='''' then
+    else if sym_table^[k].pname.S[1]='''' then
       begin
         if n>0 then
           begin
@@ -271,8 +271,8 @@ procedure definitions;
         writeln(yyout, 'type YYSType = record case Integer of');
         for i := 1 to n_types do
           writeln(yyout, ' ':15, i:3, ' : ( ',
-                         'yy', sym_table^[type_table^[i]].pname^, ' : ',
-                         sym_table^[type_table^[i]].pname^, ' );');
+                         'yy', sym_table^[type_table^[i]].pname.S, ' : ',
+                         sym_table^[type_table^[i]].pname.S, ' );');
         writeln(yyout, ' ':15, 'end(*YYSType*);');
       end;
   end(*definitions*);
@@ -341,7 +341,7 @@ procedure scan_val;
         (* check for value type: *)
         if (tag='') and (n_types>0) then with act_rule do
           if sym_type^[lhs_sym]>0 then
-            tag := sym_table^[sym_type^[lhs_sym]].pname^
+            tag := sym_table^[sym_type^[lhs_sym]].pname.S
           else
             begin
               tokleng := 1;
@@ -380,7 +380,7 @@ procedure scan_val;
                         error(type_error);
                       end
                     else if sym_type^[rhs_sym[i]]>0 then
-                      tag := sym_table^[sym_type^[rhs_sym[i]]].pname^
+                      tag := sym_table^[sym_type^[rhs_sym[i]]].pname.S
                     else
                       begin
                         tokleng := length(numstr)+1;

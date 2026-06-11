@@ -144,6 +144,7 @@ $History: YACC.PAS $
 program Yacc;
 
 uses
+  SysUtils,
 {$IFDEF Debug}
 {$IFDEF DPMI}
   YaccChk,
@@ -724,6 +725,7 @@ function yylex : integer;
 var i : Integer;
 
 begin
+  try
 {$ifdef linux}
   codfilepath:='/usr/lib/fpc/lexyacc/';
 {$else}
@@ -788,12 +790,12 @@ begin
 
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
-  codfilename := 'yyparse.cod';
+  codfilename := codfilepath + 'yyparse.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'yyparse.cod';
+      codfilename := codfilepath+'..\..\yyparse.cod';
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
@@ -864,5 +866,11 @@ begin
     writeln('(see ', lstfilename, ' for more information)');
 
   halt(errors);
-
+  except
+    on E: exception do
+    begin
+      writeln(E.Message);
+      raise;
+    end;
+  end;
 end(*Yacc*).

@@ -91,7 +91,11 @@ type
 
 (* String pointers: *)
 
-StrPtr    = ^String;
+  (* Old TP string handling does bad bad things to delphi strings... *)
+  StrContainer = record
+    S: string;
+  end;
+  StrPtr    = ^StrContainer;
 
 (* Sorted integer sets: *)
 
@@ -240,8 +244,9 @@ uses YaccMsgs;
 function newStr(str : String) : StrPtr;
   var strp : StrPtr;
   begin
-    getmem(strp, succ(length(str)));
-    move(str, strp^, succ(length(str)));
+    (* TODO - this leaks memory. Find a way of cleaning it up *)
+    New(StrP);
+    StrP.S := str;
     newStr := strp;
   end(*newStr*);
 
@@ -462,6 +467,7 @@ function newIntSet ( var M : IntSet ) : IntSetPtr;
   var
     MP : IntSetPtr;
   begin
+    (* TODO - this leaks memory. Find a way of cleaning it up *)
     getmem(MP, (size(M)+1)*sizeOf(Integer));
     move(M, MP^, (size(M)+1)*sizeOf(Integer));
     newIntSet := MP;
@@ -471,6 +477,7 @@ function newEmptyIntSet : IntSetPtr;
   var
     MP : IntSetPtr;
   begin
+    (* TODO - this leaks memory. Find a way of cleaning it up *)
     getmem(MP, (max_elems+1)*sizeOf(Integer));
     MP^[0] := 0;
     newEmptyIntSet := MP
