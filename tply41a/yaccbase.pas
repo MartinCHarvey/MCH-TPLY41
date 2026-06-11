@@ -245,9 +245,8 @@ function newStr(str : String) : StrPtr;
   var strp : StrPtr;
   begin
     (* TODO - this leaks memory. Find a way of cleaning it up *)
-    New(StrP);
-    StrP.S := str;
-    newStr := strp;
+    New(result);
+    result.S := str;
   end(*newStr*);
 
 (* Integer sets: *)
