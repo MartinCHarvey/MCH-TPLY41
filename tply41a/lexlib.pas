@@ -52,6 +52,7 @@ yyline            : ModeratelyLargeString;      (* current input line *)
 yylineno, yycolno : Integer;     (* current input position *)
 yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
 yyleng            : Word;         (* length of matched text *)
+yytoken_overrun   : Boolean;
 
 (* I/O routines:
 
@@ -74,6 +75,8 @@ yyleng            : Word;         (* length of matched text *)
    to the input buffer), you can easily replace get_char, unget_char and
    put_char by another suitable set of routines, e.g. if you want to read
    from/write to memory, etc. *)
+
+function yytoken_text: AnsiString;
 
 function get_char : AnsiChar;
   (* obtain one character from the input file (null character at end-of-
@@ -169,6 +172,27 @@ procedure yyclear;
 
 implementation
 
+uses
+  AnsiStrings;
+
+function yytoken_text: AnsiString;
+var
+  StartPos: integer;
+begin
+  //Need null terminator at end of buffer.
+  Assert(yyleng <= Pred(BIGGER_STRING_LEN));
+  StartPos := yyleng;
+  while (StartPos > 0) and (yytext[StartPos] <> #0) do
+    Dec(StartPos);
+  result := StrPas(@yytext[Succ(StartPos)]);
+  if yytoken_overrun then
+  begin
+    //OK, and now text is one char too long.
+    Delete(result, Length(result), 1);
+  end;
+end;
+
+
 procedure fatal ( msg : String );
   (* writes a fatal error message and halts program *)
   begin
@@ -198,7 +222,9 @@ function get_char : AnsiChar;
         // and looking for lf chars.
         readln(yyinput, UniLine);
         SLen := Length(UniLine);
-        if SLen > BIGGER_STRING_LEN then
+        //Pred of bigger string len because we need a null terminator for subsequent
+        //processing.
+        if SLen > Pred(BIGGER_STRING_LEN) then
             fatal('Line longer than 4k');
 
         FillChar(yyline, sizeof(yyline), 0);
@@ -228,7 +254,7 @@ function get_char : AnsiChar;
 
 procedure unget_char ( c : AnsiChar );
   begin
-    if bufptr = BIGGER_STRING_LEN then fatal('input buffer overflow');
+    if bufptr >= Pred(BIGGER_STRING_LEN) then fatal('input buffer overflow');
     inc(bufptr);
     dec(yycolno);
     buf[bufptr] := c;
@@ -356,7 +382,7 @@ procedure yynew;
 
 procedure yyscan;
   begin
-    if yyleng= BIGGER_STRING_LEN then fatal('yytext overflow');
+    if yyleng >= Pred(BIGGER_STRING_LEN) then fatal('yytext overflow');
     yyactchar := get_char;
     inc(yyleng);
     yytext[yyleng] := yyactchar;
