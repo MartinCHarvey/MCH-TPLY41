@@ -343,6 +343,7 @@ function newStr(str : String) : StrPtr;
   begin
     New(result);
     result.S := str;
+    (* TODO - This leaks memory. - Create some list we can gcollect later*)
   end(*newStr*);
 
 function newCClass(cc : CClass) : CClassPtr;
@@ -351,6 +352,7 @@ function newCClass(cc : CClass) : CClassPtr;
     new(ccp);
     ccp^ := cc;
     newCClass := ccp;
+    (* TODO - This leaks memory. - Create some list we can gcollect later*)
   end(*newCClass*);
 
 (* Integer sets: *)
