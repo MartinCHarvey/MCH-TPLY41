@@ -94,7 +94,7 @@ procedure eval(r : RegExpr;
         nullable := false
       end
     else if is_strExpr(r, str) then
-      if length(str^)=0 then
+      if length(str.S)=0 then
         (* empty string is treated as empty expression *)
         begin
           empty(FIRST); empty(LAST);
@@ -102,11 +102,11 @@ procedure eval(r : RegExpr;
         end
       else
         begin
-          addCharPos(str^[1]);
+          addCharPos(str.S[1]);
           singleton(FIRST, n_pos);
-          for i := 2 to length(str^) do
+          for i := 2 to length(str.S) do
             begin
-              addCharPos(str^[i]);
+              addCharPos(str.S[i]);
               singleton(pos_table^[pred(n_pos)].follow_pos^, n_pos);
             end;
           singleton(LAST, n_pos);

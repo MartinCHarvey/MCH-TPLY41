@@ -474,7 +474,7 @@ function lookup(k : Integer) : String;
       if pname=nil then
         lookup := ''
       else
-        lookup := pname^
+        lookup := pname.S;
   end(*lookup*);
 
 {$ifndef fpc}{$F+}{$endif}
@@ -516,16 +516,16 @@ begin
     0      : pname := '$end';
     -1     : pname := '$accept';
   else  begin
-    if sym_table^[sym_key^[sym]].pname^[1]=''''
+    if sym_table^[sym_key^[sym]].pname.S[1]=''''
       then  begin
         pname := singleQuoteStr(
-                   copy( sym_table^[sym_key^[sym]].pname^,
+                   copy( sym_table^[sym_key^[sym]].pname.S,
                          2,
-                         length(sym_table^[sym_key^[sym]].pname^)-2)
+                         length(sym_table^[sym_key^[sym]].pname.S)-2)
                  )
       end
       else  begin
-        pname := sym_table^[sym_key^[sym]].pname^;
+        pname := sym_table^[sym_key^[sym]].pname.S;
       end;
   end;
   end;
@@ -536,6 +536,7 @@ end(*pname*);
 function newRuleRec ( r : RuleRec ) : RuleRecPtr;
   var rp : RuleRecPtr;
   begin
+    (* TODO - this leaks memory. Find a way of cleaning it up *)
     getmem(rp, 2*sizeOf(Integer)+r.rhs_len*sizeOf(Integer));
     move(r, rp^, 2*sizeOf(Integer)+r.rhs_len*sizeOf(Integer));
     newRuleRec := rp;
@@ -617,8 +618,8 @@ procedure add_type ( k : Integer );
 function type_less ( i, j : Integer ) : Boolean;
 {$ifndef fpc}{$F-}{$endif}
   begin
-    type_less := sym_table^[type_table^[i]].pname^<
-                 sym_table^[type_table^[j]].pname^
+    type_less := sym_table^[type_table^[i]].pname.S < { lexic compare }
+                 sym_table^[type_table^[j]].pname.S
   end(*type_less*);
 
 {$ifndef fpc}{$F+}{$endif}
@@ -657,15 +658,15 @@ function search_type ( symbol : String ) : Boolean;
     (* binary search: *)
     l := 1; r := n_types;
     k := l + (r-l) div 2;
-    while (l<r) and (sym_table^[type_table^[k]].pname^<>symbol) do
+    while (l<r) and (sym_table^[type_table^[k]].pname.S <>symbol) do
       begin
-        if sym_table^[type_table^[k]].pname^<symbol then
+        if sym_table^[type_table^[k]].pname.S <symbol then
           l := succ(k)
         else
           r := pred(k);
         k := l + (r-l) div 2;
       end;
-    search_type := (k<=n_types) and (sym_table^[type_table^[k]].pname^=symbol);
+    search_type := (k<=n_types) and (sym_table^[type_table^[k]].pname.S = symbol);
   end(*search_type*);
 
 (* Precedence table routines: *)
@@ -945,6 +946,7 @@ begin
 
   (* allocate tables: *)
 
+  (* TODO - these all leak memory. Find a way of cleaning them up *)
   new(sym_table);
   new(sym_key);
   new(rule_table);

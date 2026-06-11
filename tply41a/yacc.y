@@ -1,5 +1,6 @@
 
-/* YACC.Y: Yacc grammar for Yacc main program. 2-17-91, 4-30-91 AG
+/* YACC.Y: Yacc grammar for Yacc main program.
+   2-17-91, 4-30-91 AG - MCH Mod 1 (2026)
    To bootstrap Yacc, use Yacc iself to compile this grammar, then
    run tpc on the generated program.
 
@@ -57,6 +58,8 @@
 
 $Revision: 2 $
 $Modtime: 96-08-01 11:24 $
+
+   2-17-91, 4-30-91 AG - MCH Mod 1 (2026)
 
 
 Last changes:
@@ -144,6 +147,7 @@ $History: YACC.PAS $
 program Yacc;
 
 uses
+  SysUtils,
 {$IFDEF Debug}
 {$IFDEF DPMI}
   YaccChk,
@@ -724,6 +728,7 @@ function yylex : integer;
 var i : Integer;
 
 begin
+  try
 {$ifdef linux}
   codfilepath:='/usr/lib/fpc/lexyacc/';
 {$else}
@@ -788,12 +793,12 @@ begin
 
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
-  codfilename := 'yyparse.cod';
+  codfilename := codfilepath + 'yyparse.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'yyparse.cod';
+      codfilename := codfilepath+'..\..\yyparse.cod';
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
@@ -864,5 +869,11 @@ begin
     writeln('(see ', lstfilename, ' for more information)');
 
   halt(errors);
-
+  except
+    on E: exception do
+    begin
+      writeln(E.Message);
+      raise;
+    end;
+  end;
 end(*Yacc*).

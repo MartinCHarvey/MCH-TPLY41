@@ -28,6 +28,8 @@
 $Revision: 2 $
 $Modtime: 96-08-01 11:24 $
 
+   2-17-91, 4-30-91 AG - MCH Mod 1 (2026)
+
 
 Last changes:
 
@@ -114,6 +116,7 @@ $History: YACC.PAS $
 program Yacc;
 
 uses
+  SysUtils,
 {$IFDEF Debug}
 {$IFDEF DPMI}
   YaccChk,
@@ -2388,6 +2391,7 @@ function yylex : integer;
 var i : Integer;
 
 begin
+  try
 {$ifdef linux}
   codfilepath:='/usr/lib/fpc/lexyacc/';
 {$else}
@@ -2528,5 +2532,11 @@ begin
     writeln('(see ', lstfilename, ' for more information)');
 
   halt(errors);
-
+  except
+    on E: exception do
+    begin
+      writeln(E.Message);
+      raise;
+    end;
+  end;
 end(*Yacc*).

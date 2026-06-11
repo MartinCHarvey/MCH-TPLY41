@@ -221,7 +221,7 @@ function lookup(k : Integer) : String;
       if pname=nil then
         lookup := ''
       else
-        lookup := copy(pname^, 1, length(pname^))
+        lookup := pname.S;
   end(*lookup*);
 procedure entry(k : Integer; symbol : String);
   begin

@@ -85,7 +85,12 @@ type
 
 (* String and character class pointers: *)
 
-StrPtr    = ^String;
+  (* Old TP string handling does bad bad things to delphi strings... *)
+  StrContainer = record
+    S: string;
+  end;
+  StrPtr    = ^StrContainer;
+
 CClass    = set of Char;
 CClassPtr = ^CClass;
 
@@ -334,9 +339,9 @@ uses LexMsgs;
 function newStr(str : String) : StrPtr;
   var strp : StrPtr;
   begin
-    getmem(strp, succ(length(str)));
-    move(str, strp^, succ(length(str)));
-    newStr := strp;
+    New(result);
+    result.S := str;
+    (* TODO - This leaks memory. - Create some list we can gcollect later*)
   end(*newStr*);
 
 function newCClass(cc : CClass) : CClassPtr;
@@ -345,6 +350,7 @@ function newCClass(cc : CClass) : CClassPtr;
     new(ccp);
     ccp^ := cc;
     newCClass := ccp;
+    (* TODO - This leaks memory. - Create some list we can gcollect later*)
   end(*newCClass*);
 
 (* Integer sets: *)
@@ -1144,7 +1150,7 @@ function regExprStr(r : RegExpr) : String;
         unparseExpr := charStr(c, [ '"','.','^','$','[',']','*','+','?',
                                     '{','}','|','(',')','/','<','>'])
       else if is_strExpr(r, str) then
-        unparseExpr := doubleQuoteStr(str^)
+        unparseExpr := doubleQuoteStr(str.S)
       else if is_cclassExpr(r, cc) then
         unparseExpr := cclassStr(cc^)
       else if is_starExpr(r, r1) then

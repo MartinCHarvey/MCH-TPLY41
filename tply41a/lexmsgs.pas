@@ -93,6 +93,7 @@ pos_table_overflow 		= 'FATAL: position table overflow';
 state_table_overflow 		= 'FATAL: state table overflow';
 trans_table_overflow 		= 'FATAL: transition table overflow';
 macro_stack_overflow 		= 'FATAL: macro stack overflow';
+unicode_confusion       = 'FATAL: downconversion of unicode string > chr(255)';
 
 implementation
 

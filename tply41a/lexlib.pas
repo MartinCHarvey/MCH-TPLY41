@@ -8,6 +8,9 @@ unit LexLib;
 
 interface
 
+uses
+  lexdstr;
+
 (* The Lex library unit supplies a collection of variables and routines
    needed by the lexical analyzer routine yylex and application programs
    using Lex-generated lexical analyzers. It also provides access to the
@@ -38,12 +41,6 @@ interface
    input and output, but you may change these assignments to fit your
    target application (use the Turbo Pascal standard routines assign,
    reset, and rewrite for this purpose). *)
-
-const
-  BIGGER_STRING_LEN = 4096;
-
-type
-  ModeratelyLargeString = array[1..BIGGER_STRING_LEN] of AnsiChar;
 
 var
 
