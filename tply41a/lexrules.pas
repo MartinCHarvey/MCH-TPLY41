@@ -43,7 +43,7 @@ unit LexRules;
 
 interface
 
-uses LexBase, LexTable;
+uses LexBase, LexTable, lexdstr;
 
 
 procedure parse_rule ( rule_no : Integer );
@@ -90,13 +90,11 @@ uses LexMsgs;
    act_pos will point to the position of the original macro call in the
    source line. This is needed to give proper error diagnostics. *)
 
-const max_chars = 2048;
-
 var
 
 act_pos, bufptr : Integer;
   (* current position in source line and input stack pointer *)
-buf : array [1..max_chars] of Char;
+buf : ModeratelyLargeString;
   (* input buffer *)
 str_state, cclass_state, quote_state : Boolean;
   (* state information *)
@@ -118,9 +116,13 @@ procedure put_str(str : String);
   var i : Integer;
   begin
     inc(bufptr, length(str));
-    if bufptr>max_chars then fatal(macro_stack_overflow);
+    if bufptr> Pred(BIGGER_STRING_LEN) then fatal(macro_stack_overflow);
     for i := 1 to length(str) do
-      buf[bufptr-i+1] := str[i];
+    begin
+      if Ord(str[i]) > Ord(High(AnsiChar)) then
+        fatal(unicode_confusion);
+      buf[bufptr-i+1] := AnsiChar(str[i]);
+    end;
   end(*put_str*);
 
 procedure init_scanner;
@@ -176,7 +178,7 @@ function act_char : Char;
 {$endif}
             if sym_type=macro_sym then
               begin
-                put_str(subst^+#0);
+                put_str(subst.S+#0);
                 inc(n_macros);
               end
             else
@@ -206,7 +208,8 @@ function act_char : Char;
     else
       begin
         while pop_macro do ;
-        act_char := buf[bufptr];
+        Assert(Ord(High(act_char)) >= Ord(High(buf[bufptr])));
+        act_char := Char(buf[bufptr]);
       end
   end(*act_char*);
 

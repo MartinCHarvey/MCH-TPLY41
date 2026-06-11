@@ -114,6 +114,7 @@ $History: YACC.PAS $
 program Yacc;
 
 uses
+  SysUtils,
 {$IFDEF Debug}
 {$IFDEF DPMI}
   YaccChk,
@@ -2388,6 +2389,7 @@ function yylex : integer;
 var i : Integer;
 
 begin
+  try
 {$ifdef linux}
   codfilepath:='/usr/lib/fpc/lexyacc/';
 {$else}
@@ -2528,5 +2530,11 @@ begin
     writeln('(see ', lstfilename, ' for more information)');
 
   halt(errors);
-
+  except
+    on E: exception do
+    begin
+      writeln(E.Message);
+      raise;
+    end;
+  end;
 end(*Yacc*).

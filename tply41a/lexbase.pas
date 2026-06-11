@@ -85,7 +85,14 @@ type
 
 (* String and character class pointers: *)
 
-StrPtr    = ^String;
+  (* Declare string container in a type safe way.
+     old TP string handling totally barfs Delphi strings }
+*)
+  StrContainer = record
+    S: string;
+  end;
+  StrPtr    = ^StrContainer;
+
 CClass    = set of Char;
 CClassPtr = ^CClass;
 
@@ -334,9 +341,8 @@ uses LexMsgs;
 function newStr(str : String) : StrPtr;
   var strp : StrPtr;
   begin
-    getmem(strp, succ(length(str)));
-    move(str, strp^, succ(length(str)));
-    newStr := strp;
+    New(result);
+    result.S := str;
   end(*newStr*);
 
 function newCClass(cc : CClass) : CClassPtr;
@@ -1144,7 +1150,7 @@ function regExprStr(r : RegExpr) : String;
         unparseExpr := charStr(c, [ '"','.','^','$','[',']','*','+','?',
                                     '{','}','|','(',')','/','<','>'])
       else if is_strExpr(r, str) then
-        unparseExpr := doubleQuoteStr(str^)
+        unparseExpr := doubleQuoteStr(str.S)
       else if is_cclassExpr(r, cc) then
         unparseExpr := cclassStr(cc^)
       else if is_starExpr(r, r1) then
