@@ -1,5 +1,6 @@
 
-/* YACC.Y: Yacc grammar for Yacc main program. 2-17-91, 4-30-91 AG
+/* YACC.Y: Yacc grammar for Yacc main program.
+   2-17-91, 4-30-91 AG - MCH Mod 1 (2026)
    To bootstrap Yacc, use Yacc iself to compile this grammar, then
    run tpc on the generated program.
 
@@ -57,6 +58,8 @@
 
 $Revision: 2 $
 $Modtime: 96-08-01 11:24 $
+
+   2-17-91, 4-30-91 AG - MCH Mod 1 (2026)
 
 
 Last changes:
