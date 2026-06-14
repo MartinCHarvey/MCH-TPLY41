@@ -107,7 +107,7 @@ procedure parse_table;
 
   *)
 
-var shift_reduce, reduce_reduce, never_reduced : Integer;
+var shift_reduce, reduce_reduce, never_reduced, undefined_nt: Integer;
   (* number of parsing conflicts and unreduced rules detected during
      parse table generation *)
 
@@ -170,6 +170,8 @@ procedure build;
     (* initialize: *)
 
     shift_reduce := 0; reduce_reduce := 0; never_reduced := 0;
+    undefined_nt := 0;
+
     for i := 1 to n_rules do reduced[i] := false;
 
     (* traverse the state table: *)
@@ -370,9 +372,36 @@ procedure build;
     for i := 2 to n_rules do
       if not reduced[i] then inc(never_reduced);
 
+    if experiment then
+    begin
+      for i := 1 to n_nts do
+      begin
+        s := 0;
+        for j := 1 to n_rules do
+        begin
+          if rule_table^[j]^.lhs_sym = -i then
+          begin
+            s := 1;
+            break;
+          end;
+        end;
+        if s = 0 then
+        begin
+          Inc(undefined_nt);
+          j := sym_key^[-i];
+          if j <> 0 then
+            writeln(yylst, 'Undefined nonterminal: ' + sym_table^[j].pname.S);
+        end;
+      end;
+    end;
     if verbose then
       begin
         writeln(yylst);
+        if experiment then
+        begin
+          if undefined_nt > 0 then
+            writeln(yylst, undefined_nt, ' undefined nonterminals.');
+        end;
         if shift_reduce>0 then
           writeln(yylst, shift_reduce, ' shift/reduce conflicts.');
         if reduce_reduce>0 then

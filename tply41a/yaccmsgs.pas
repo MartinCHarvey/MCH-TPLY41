@@ -62,7 +62,7 @@ usage   = 'Usage: pyacc [options] yacc-file[.y] [output-file[.pas]]';
 {$else}
 usage   = 'Usage: yacc [options] yacc-file[.y] [output-file[.pas]]';
 {$endif}
-options = 'Options: -v verbose, -d debug';
+options = 'Options: -v verbose, -d debug, -x experimental';
 
 (* command line error messages: *)
 

@@ -80,7 +80,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <Debugger_RunParams>&quot;C:\MCH Stuff\Delphi XE Progs\Common\MemDB2\SQL92Grammar\SQL92Grammar.y&quot; &quot;C:\MCH Stuff\Delphi XE Progs\Common\MemDB2\SQL92Grammar\SQL92Grammar_parser&quot;</Debugger_RunParams>
+        <Debugger_RunParams>&quot;c:\MCH Stuff\Delphi XE Progs\Common\MemDB2\SQL92Grammar\SQL92Grammar.y&quot; -v</Debugger_RunParams>
         <Manifest_File>None</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
