@@ -646,6 +646,8 @@ begin
       lfilename := addExt(paramStr(i), 'l')
     else if pasfilename='' then
       pasfilename := addExt(paramStr(i), 'pas')
+    else if lstfilename='' then
+      lstfilename := addExt(paramStr(i), 'lst')
     else
       begin
         writeln(illegal_no_args);
@@ -659,7 +661,7 @@ begin
     end;
 
   if pasfilename='' then pasfilename := root(lfilename)+'.pas';
-  lstfilename := root(lfilename)+'.lst';
+  if lstfilename='' then lstfilename := root(lfilename)+'.lst';
 
   (* open files: *)
 

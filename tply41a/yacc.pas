@@ -2442,6 +2442,8 @@ begin
       yfilename := addExt(paramStr(i), 'y')
     else if pasfilename='' then
       pasfilename := addExt(paramStr(i), 'pas')
+    else if lstfilename='' then
+      lstfilename := addExt(paramStr(i), 'lst')
     else
       begin
         writeln(illegal_no_args);
@@ -2455,7 +2457,7 @@ begin
     end;
 
   if pasfilename='' then pasfilename := root(yfilename)+'.pas';
-  lstfilename := root(yfilename)+'.lst';
+  if lstfilename='' then lstfilename := root(yfilename)+'.lst';
 
   (* open files: *)
 
