@@ -806,7 +806,7 @@ begin
 
   (* parse source grammar: *)
 
-  write('parse ... ');
+  writeln('parse ... ');
 
   lno := 0; cno := 1; line := '';
 

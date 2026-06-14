@@ -148,9 +148,18 @@ const ILLEGAL = 272;
 
 var yylval : YYSType;
 
+{$IFNDEF INSERT_IMPLEMENTATION_CALUSE}
 function yylex : Integer; forward;
+{$ENDIF}
 
 function yyparse : Integer;
+
+{$IFDEF INSERT_IMPLEMENTATION_CALUSE}
+implementation
+
+function yyparse : Integer;
+
+{$ENDIF}
 
 var yystate, yysp, yyn : Integer;
     yys : array [1..yymaxdepth] of Integer;
@@ -2469,7 +2478,7 @@ begin
 
   (* parse source grammar: *)
 
-  write('parse ... ');
+  writeln('parse ... ');
 
   lno := 0; cno := 1; line := '';
 

@@ -6,9 +6,18 @@
 
 var yylval : YYSType;
 
+{$IFNDEF INSERT_IMPLEMENTATION_CALUSE}
 function yylex : Integer; forward;
+{$ENDIF}
 
 function yyparse : Integer;
+
+{$IFDEF INSERT_IMPLEMENTATION_CALUSE}
+implementation
+
+function yyparse : Integer;
+
+{$ENDIF}
 
 var yystate, yysp, yyn : Integer;
     yys : array [1..yymaxdepth] of Integer;

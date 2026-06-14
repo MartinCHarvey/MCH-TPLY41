@@ -574,18 +574,18 @@ procedure generate_parser;
     if startnt=0 then error(empty_grammar);
     if errors=0 then
       begin
-        write('sort ... ');
+        writeln('sort ... ');
         sort_rules; rule_offsets;
-        write('closures ... ');
+        writeln('closures ... ');
         closures;
-        write('first sets ... ');
+        writeln('first sets ... ');
         first_sets;
-        write('LR0 set ... ');
+        writeln('LR0 set ... ');
         LR0Set;
-        write('lookaheads ... ');
+        writeln('lookaheads ... ');
         lookaheads;
         writeln;
-        write('code generation ... ');
+        writeln('code generation ... ');
         parse_table;
       end;
   end(*generate_parser*);
