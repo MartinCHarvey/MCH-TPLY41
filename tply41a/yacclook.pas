@@ -174,8 +174,8 @@ procedure spontaneous_lookaheads;
      used for endmarkers (-i denotes endmarker #i) *)
 
   var count, last_count, i : Integer;
-      first_syms : SymSetArray;
-      nullable : BoolArray;
+      first_syms : ^SymSetArray;
+      nullable : ^BoolArray;
 
   function sym_count ( n : Integer ) : Integer;
     (* count lookahead symbols *)
@@ -246,25 +246,32 @@ procedure spontaneous_lookaheads;
     end(*propagate*);
 
   begin(*spontaneous_lookaheads*)
-    with item_set do
-      begin
-        (* initialize kernel lookahead sets: *)
-        for i := 1 to n_kernel_items do singleton(lookahead_set[i], -i);
-        (* compute first sets and nullable flags: *)
-        for i := 1 to n_items do compute_first_syms(i);
-        (* initialize nonkernel lookahead sets: *)
-        for i := n_kernel_items+1 to n_items do empty(lookahead_set[i]);
-        for i := 1 to n_items do init_lookaheads(i);
-        (* repeated passes until no more lookaheads have been added
-           during the previous pass: *)
-        count := sym_count(n_items);
-        repeat
-          last_count := count;
-          for i := 1 to n_items do
-            propagate(i);
+    New(first_syms);
+    New(nullable);
+    try
+      with item_set do
+        begin
+          (* initialize kernel lookahead sets: *)
+          for i := 1 to n_kernel_items do singleton(lookahead_set[i], -i);
+          (* compute first sets and nullable flags: *)
+          for i := 1 to n_items do compute_first_syms(i);
+          (* initialize nonkernel lookahead sets: *)
+          for i := n_kernel_items+1 to n_items do empty(lookahead_set[i]);
+          for i := 1 to n_items do init_lookaheads(i);
+          (* repeated passes until no more lookaheads have been added
+             during the previous pass: *)
           count := sym_count(n_items);
-        until last_count=count;
-      end;
+          repeat
+            last_count := count;
+            for i := 1 to n_items do
+              propagate(i);
+            count := sym_count(n_items);
+          until last_count=count;
+        end;
+    finally
+      Dispose(first_syms);
+      Dispose(nullable);
+    end;
   end(*spontaneous_lookaheads*);
 
 {$ifndef fpc}{$F+}{$endif}

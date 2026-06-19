@@ -84,7 +84,7 @@ const
 {$IFDEF MsDos}
 max_elems  = 50;  (* maximum size of integer sets *)
 {$ELSE}
-max_elems  = 75; (* maximum size of integer sets *)
+max_elems  = 8192; (* maximum size of integer sets *)
 {$ENDIF}
 
 type
