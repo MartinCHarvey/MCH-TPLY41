@@ -40,6 +40,9 @@ unit YaccMsgs;
 
 interface
 
+const
+  maxerrors = 50;
+  maxwarnings = High(integer);
 
 var errors, warnings : Integer;
   (* - current error and warning count *)
@@ -109,6 +112,9 @@ item_table_overflow 		= 'FATAL: item table overflow';
 trans_table_overflow 		= 'FATAL: transition table overflow';
 redn_table_overflow 		= 'FATAL: reduction table overflow';
 
+too_many_errors         = 'FATAL: too many errors, stopping';
+too_many_warnings       = 'FATAL: too many warnings, stopping';
+
 implementation
 
 uses YaccBase;
@@ -136,31 +142,42 @@ procedure position(var f : Text;
 procedure error(msg : String);
   begin
     inc(errors);
-    writeln;
-    position(output, lno, line, cno-tokleng);
-    writeln(msg);
-    writeln(yylst);
-    position(yylst, lno, line, cno-tokleng);
-    writeln(yylst, msg);
-    if ioresult<>0 then ;
+    if errors > maxerrors then
+      fatal(too_many_errors)
+    else
+    begin
+      writeln;
+      position(output, lno, line, cno-tokleng);
+      writeln(msg);
+      writeln(yylst);
+      position(yylst, lno, line, cno-tokleng);
+      writeln(yylst, msg);
+      if ioresult<>0 then ;
+    end;
   end(*error*);
 
 procedure warning(msg : String);
   begin
     inc(warnings);
-    writeln;
-    position(output, lno, line, cno-tokleng);
-    writeln(msg);
-    writeln(yylst);
-    position(yylst, lno, line, cno-tokleng);
-    writeln(yylst, msg);
-    if ioresult<>0 then ;
+    if warnings > maxwarnings then
+      fatal(too_many_warnings)
+    else
+    begin
+      writeln;
+      position(output, lno, line, cno-tokleng);
+      writeln(msg);
+      writeln(yylst);
+      position(yylst, lno, line, cno-tokleng);
+      writeln(yylst, msg);
+      if ioresult<>0 then ;
+    end;
   end(*warning*);
 
 procedure fatal(msg : String);
   begin
     writeln;
     writeln(msg);
+    writeln(yylst, msg);
     close(yyin); close(yyout); close(yylst); erase(yyout);
     halt(1)
   end(*fatal*);
