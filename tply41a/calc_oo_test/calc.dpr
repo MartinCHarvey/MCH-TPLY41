@@ -11,7 +11,9 @@ uses
   yacclib_oo in '..\lib_oo\yacclib_oo.pas',
   lexlib_oo in '..\lib_oo\lexlib_oo.pas',
   lexdstr in '..\lexdstr.pas',
-  IoUtils;
+  IoUtils,
+  Trackables in '..\..\..\..\Delphi XE Progs\Common\Tracking\Trackables.pas',
+  BinaryTree in '..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas';
 
 var
   StrInput: string;
@@ -59,6 +61,8 @@ begin
       until Eof(yyoutput);
       Close(yyoutput);
     end;
+    DeleteFile(TmpName);
+    DeleteFile(TmpOutName);
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
