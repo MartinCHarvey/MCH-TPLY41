@@ -13,15 +13,15 @@ uses
 
 
 %classname TCalcParser
-%classdef  yyp_result: integer;
-%classdef  lastIdent, lastDef: string;
-%classdef  identList: TStringList;
-%classdef  Lexer: TCalcLexer;
-%classdef
-%classdef  procedure AddDef(ident:string; val: integer);
-%classdef  function lookupLastIdent: integer;
-%classdef  constructor Create;
-%classdef  destructor Destroy; override;
+%classvar  yyp_result: integer;
+%classvar  lastIdent, lastDef: string;
+%classvar  identList: TStringList;
+%classvar  Lexer: TCalcLexer;
+
+%classfunc  procedure AddDef(ident:string; val: integer);
+%classfunc  function lookupLastIdent: integer;
+%classfunc  constructor Create;
+%classfunc  destructor Destroy; override;
 
 %token
         _number

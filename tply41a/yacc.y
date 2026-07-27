@@ -160,7 +160,7 @@ uses
   WinCrt,
 {$ENDIF}
 {$ENDIF}
-  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars, ClassDefs;
+  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars, YaccClassDefs;
 
 %}
 
@@ -173,7 +173,7 @@ uses
   LITERAL       /* single character literal */
   LITID         /* multiple character literal */
   NUMBER	/* nonnegative integers: {digit}+ */
-  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC PCLASSNAME PCLASSDEF
+  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC PCLASSNAME PCLASSVAR PCLASSFUNC
   		/* reserved words: PTOKEN=%token, etc. */
   PP		/* source sections separator %% */
   LCURL		/* curly braces: %{ and %} */
@@ -201,7 +201,8 @@ pnonassoc	: PNONASSOC	{ yyerrok; }
 ptype		: PTYPE	        { yyerrok; }
 pstart		: PSTART        { yyerrok; }
 pclassname      : PCLASSNAME    { yyerrok; }
-pclassdef       : PCLASSDEF     { yyerrok; }
+pclassvar       : PCLASSVAR     { yyerrok; }
+pclassfunc      : PCLASSFUNC    { yyerrok; }
 pprec		: PPREC
 pp		: PP	        { yyerrok; }
 lcurl		: LCURL
@@ -224,7 +225,12 @@ eq		: '='
 grammar		: defs pp
 		  		{ sort_types;
                                   definitions;
-                                  next_section; }
+                                  oo_def;
+                                  oo_classvars;
+                                  writeln(yyout, '{.cod}');
+                                  next_section;
+                                  oo_classfuncs;
+                                  oo_impl; }
 		  rules
 		  		{ next_section;
                                   generate_parser;
@@ -272,7 +278,9 @@ def		: pstart id
 
                 | pclassname    { (* Rely on custom lexer to add classname *) }
 
-                | pclassdef     { (* Rely on custom lexer to add classdef *) }
+                | pclassvar     { (* Rely on custom lexer to add classvar *) }
+
+                | pclassfunc     { (* Rely on custom lexer to add classfunc *) }
 
 		;
 
@@ -612,13 +620,13 @@ function yylex : integer;
     function lookup(key : String; var tok : integer) : boolean;
       (* table of Yacc keywords (unstropped): *)
       const
-        no_of_entries = 13;
+        no_of_entries = 14;
         max_entry_length = 9;
         keys : array [1..no_of_entries] of String[max_entry_length] = (
-          '0', '2', 'binary', 'classdef', 'classname', 'left', 'nonassoc', 'prec', 'right',
+          '0', '2', 'binary', 'classfunc', 'classname', 'classvar', 'left', 'nonassoc', 'prec', 'right',
           'start', 'term', 'token', 'type');
         toks : array [1..no_of_entries] of integer = (
-          PTOKEN, PNONASSOC, PNONASSOC, PCLASSDEF, PCLASSNAME, PLEFT, PNONASSOC, PPREC, PRIGHT,
+          PTOKEN, PNONASSOC, PNONASSOC, PCLASSFUNC, PCLASSNAME, PCLASSVAR, PLEFT, PNONASSOC, PPREC, PRIGHT,
           PSTART, PTOKEN, PTOKEN, PTYPE);
       var m, n, k : integer;
       begin
@@ -691,7 +699,9 @@ function yylex : integer;
                 end;
               if lookup(keywstr, tok) then
               begin
-                if (tok = PCLASSNAME) or (tok = PCLASSDEF) then
+                if (tok = PCLASSNAME) or
+                   (tok = PCLASSFUNC) or
+                   (tok = PCLASSVAR) then
                 begin
                   if object_oriented then
                   begin
@@ -707,9 +717,19 @@ function yylex : integer;
                       else
                         scan_keyword := ILLEGAL;
                     end
-                    else //PCLASSDEF
+                    else if (tok = PCLASSFUNC) then
                     begin
-                      if AddClassDef(trail) = 0 then
+                      if AddClassFunc(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end
+                    else // tok = PCLASSVAR
+                    begin
+                      if AddClassVar(trail) = 0 then
                       begin
                         scan_keyword := tok; // Good token.
                         cno := Succ(Length(Line)); // Swallow the rest of the line.

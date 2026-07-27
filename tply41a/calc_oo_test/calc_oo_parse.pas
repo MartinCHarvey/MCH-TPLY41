@@ -22,20 +22,39 @@ const _rparen = 263;
 const _ident = 264;
 const _semi = 265;
 const _eq = 266;
+{ oo_def }
+type
+  TCalcParser = class 
+    public
+{ oo_classvars }
+      yyp_result: integer;
+      lastIdent, lastDef: string;
+      identList: TStringList;
+      Lexer: TCalcLexer;
+{.cod}
 
-var yylval : YYSType;
+  yystate, yysp, yyn : Integer;
+  yys : array [1..yymaxdepth] of Integer;
+  yyv : array [1..yymaxdepth] of YYSType;
+  yyval : YYSType;
+  yylval : YYSType;
 
-function yylex : Integer; forward;
+  function yylex : Integer;
+  function yyparse : Integer;
 
-function yyparse : Integer;
+{ oo_classfuncs }
+      procedure AddDef(ident:string; val: integer);
+      function lookupLastIdent: integer;
+      constructor Create;
+      destructor Destroy; override;
+{ oo_impl }
+  end;
 
-var yystate, yysp, yyn : Integer;
-    yys : array [1..yymaxdepth] of Integer;
-    yyv : array [1..yymaxdepth] of YYSType;
-    yyval : YYSType;
+implementation
+
+function TCalcParser.yyparse : Integer;
 
 procedure yyaction ( yyruleno : Integer );
-  (* local definitions: *)
 begin
   (* actions: *)
   case yyruleno of
