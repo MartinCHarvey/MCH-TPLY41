@@ -12,6 +12,7 @@ uses
 %}
 
 %classname TCalcLexer
+%classdef  { Sample commented def }
 
 %%
 

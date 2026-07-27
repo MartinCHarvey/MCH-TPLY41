@@ -18,6 +18,7 @@ type
   TCalcLexer = class(TPLYLexer)
     public
       function yylex: integer; override;
+      { Sample commented def }
   end;
 
 implementation

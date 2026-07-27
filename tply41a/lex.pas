@@ -76,7 +76,7 @@ uses
   WinCrt,
 {$ENDIF}
   LexBase, LexTable, LexPos, LexDFA, LexOpt, LexList, LexRules, LexMsgs,
-  lexclassdefs;
+  LexClassDefs;
 
 procedure get_line;
   (* obtain line from source file *)
@@ -517,6 +517,7 @@ begin
       ret := GetClassDef(i, Tmp);
       if ret = 0 then
         writeln(yyout, '      ' + Tmp);
+      Inc(i);
     until ret <> 0;
     writeln(yyout, '  end;');
     writeln(yyout);
