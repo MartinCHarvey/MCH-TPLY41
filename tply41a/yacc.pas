@@ -2416,27 +2416,38 @@ function yylex : integer;
                 end;
               if lookup(keywstr, tok) then
               begin
-                scan_keyword := tok;
-                if (scan_keyword = PCLASSNAME) or (scan_keyword = PCLASSDEF) then
+                if (tok = PCLASSNAME) or (tok = PCLASSDEF) then
                 begin
                   if object_oriented then
                   begin
                     trail := Copy(line, cno, Length(Line) { will trunc });
-                    if (scan_keyword = PCLASSNAME) then
+                    if (tok = PCLASSNAME) then
                     begin
                       trail := Trim(trail);
                       if SetClassName(trail) <> 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Length(Line); // Swallow the rest of the line.
+                      end
+                      else
                         scan_keyword := ILLEGAL;
                     end
-                    else
+                    else //PCLASSDEF
                     begin
                       if AddClassDef(trail) <> 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Length(Line); // Swallow the rest of the line.
+                      end
+                      else
                         scan_keyword := ILLEGAL;
                     end;
                   end
                   else
-                    scan_keyword := ILLEGAL;
+                    scan_keyword := ILLEGAL; //Need oo mode to scan these.
                 end
+                else
+                  scan_keyword := tok;
               end
               else
                 scan_keyword := ILLEGAL
@@ -2554,9 +2565,9 @@ begin
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
   if object_oriented then
-    codfilename := codfilepath + 'yyparse.cod'
+    codfilename := codfilepath + 'yyparse_oo.cod'
   else
-    codfilename := codfilepath + 'yyparse_oo.cod';
+    codfilename := codfilepath + 'yyparse.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
