@@ -2340,11 +2340,11 @@ function yylex : integer;
         no_of_entries = 13;
         max_entry_length = 9;
         keys : array [1..no_of_entries] of String[max_entry_length] = (
-          '0', '2', 'binary', 'left', 'nonassoc', 'prec', 'right',
-          'start', 'term', 'token', 'type', 'classname', 'classdef');
+          '0', '2', 'binary', 'classdef', 'classname', 'left', 'nonassoc', 'prec', 'right',
+          'start', 'term', 'token', 'type');
         toks : array [1..no_of_entries] of integer = (
-          PTOKEN, PNONASSOC, PNONASSOC, PLEFT, PNONASSOC, PPREC, PRIGHT,
-          PSTART, PTOKEN, PTOKEN, PTYPE, PCLASSNAME, PCLASSDEF);
+          PTOKEN, PNONASSOC, PNONASSOC, PCLASSDEF, PCLASSNAME, PLEFT, PNONASSOC, PPREC, PRIGHT,
+          PSTART, PTOKEN, PTOKEN, PTYPE);
       var m, n, k : integer;
       begin
         (* binary search: *)
@@ -2424,20 +2424,20 @@ function yylex : integer;
                     if (tok = PCLASSNAME) then
                     begin
                       trail := Trim(trail);
-                      if SetClassName(trail) <> 0 then
+                      if SetClassName(trail) = 0 then
                       begin
                         scan_keyword := tok; // Good token.
-                        cno := Length(Line); // Swallow the rest of the line.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
                       end
                       else
                         scan_keyword := ILLEGAL;
                     end
                     else //PCLASSDEF
                     begin
-                      if AddClassDef(trail) <> 0 then
+                      if AddClassDef(trail) = 0 then
                       begin
                         scan_keyword := tok; // Good token.
-                        cno := Length(Line); // Swallow the rest of the line.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
                       end
                       else
                         scan_keyword := ILLEGAL;

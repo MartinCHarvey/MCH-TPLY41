@@ -11,7 +11,7 @@ del *.lst
 plex calc_oo.l calc_oo_lex.pas calc_oo_lex.lst -v -oo
 echo %ERRORLEVEL%
 
-pyacc calc_oo.y calc_oo_parse.pas calc_oo_parse.lst -v -x
+pyacc calc_oo.y calc_oo_parse.pas calc_oo_parse.lst -v -oo
 echo %ERRORLEVEL%
 
 set "PATH=%OLDPATH%"

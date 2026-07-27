@@ -1,5 +1,5 @@
 
-(* Yacc parser template (TP Yacc V3.0), V1.2 6-17-91 AG *)
+(* Yacc parser template (TP Yacc V3.0), V1.2 6-17-91 AG MCH OO Mod 1 *)
 
 (* global definitions: *)
 
@@ -9,20 +9,9 @@ unit
 
 interface
 
-{$DEFINE OO_LEXLIB}
-
 uses
   calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
 
-{$DEFINE INSERT_IMPLEMENTATION_CALUSE}
-
-var
-  yyp_result: integer;
-  lastIdent, lastDef: string;
-  identList: TStringList;
-
-  procedure AddDef(ident:string; val: integer);
-  function lookupLastIdent: integer;
 const _number = 257;
 const _plus = 258;
 const _minus = 259;
@@ -36,18 +25,9 @@ const _eq = 266;
 
 var yylval : YYSType;
 
-{$IFNDEF INSERT_IMPLEMENTATION_CALUSE}
 function yylex : Integer; forward;
-{$ENDIF}
 
 function yyparse : Integer;
-
-{$IFDEF INSERT_IMPLEMENTATION_CALUSE}
-implementation
-
-function yyparse : Integer;
-
-{$ENDIF}
 
 var yystate, yysp, yyn : Integer;
     yys : array [1..yymaxdepth] of Integer;
@@ -674,7 +654,7 @@ abort:
 end(*yyparse*);
 
 
-procedure AddDef(ident:string; val: integer);
+procedure TCalcParser.AddDef(ident:string; val: integer);
 begin
   if IdentList.IndexOf(ident) >= 0 then
   begin
@@ -685,7 +665,7 @@ begin
         IdentList.AddObject(ident, Pointer(val));
 end;
 
-function lookupLastIdent: integer;
+function TCalcParser.lookupLastIdent: integer;
 var
   Idx: integer;
 begin
@@ -700,8 +680,19 @@ begin
     result := Integer(IdentList.Objects[Idx]);
 end;
 
-initialization
+constructor TCalcParser.Create;
+begin
+  inherited;
   IdentList := TStringList.Create;
-finalization
+  Lexer := TCalcLexer.Create;
+  //TODO - Init / reset?
+end;
+
+destructor TCalcParser.Destroy;
+begin
+  Lexer.Free;
   IdentList.Free;
+  inherited;
+end;
+
 end.
