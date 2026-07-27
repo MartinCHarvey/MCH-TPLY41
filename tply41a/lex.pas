@@ -76,7 +76,7 @@ uses
   WinCrt,
 {$ENDIF}
   LexBase, LexTable, LexPos, LexDFA, LexOpt, LexList, LexRules, LexMsgs,
-  LexClassDefs;
+  ClassDefs;
 
 procedure get_line;
   (* obtain line from source file *)

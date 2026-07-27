@@ -1,4 +1,4 @@
-unit LexClassDefs;
+unit ClassDefs;
 
 {
   Copyright (C) 2026     Martin Harvey <martin_c_harvey@hotmail.com>
