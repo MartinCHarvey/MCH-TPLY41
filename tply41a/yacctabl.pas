@@ -278,6 +278,7 @@ PropTable = array [1..max_items] of PropList;
 var
 
 verbose           : Boolean;          (* status of the verbose option *)
+object_oriented   : Boolean;          (* status of the OO option *)
 debug             : Boolean;          (* status of the debug option *)
 startnt           : Integer;          (* start nonterminal of grammar
                                          (0 if undefined) *)
@@ -926,6 +927,7 @@ var i : Integer;
 
 begin
   verbose          := false;
+  object_oriented  := false;
   debug            := false;
   startnt          := 0;
 

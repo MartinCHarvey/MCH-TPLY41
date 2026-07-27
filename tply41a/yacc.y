@@ -160,7 +160,7 @@ uses
   WinCrt,
 {$ENDIF}
 {$ENDIF}
-  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars;
+  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars, ClassDefs;
 
 %}
 
@@ -173,7 +173,7 @@ uses
   LITERAL       /* single character literal */
   LITID         /* multiple character literal */
   NUMBER	/* nonnegative integers: {digit}+ */
-  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC
+  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC PCLASSNAME PCLASSDEF
   		/* reserved words: PTOKEN=%token, etc. */
   PP		/* source sections separator %% */
   LCURL		/* curly braces: %{ and %} */
@@ -200,6 +200,8 @@ pright		: PRIGHT        { yyerrok; }
 pnonassoc	: PNONASSOC	{ yyerrok; }
 ptype		: PTYPE	        { yyerrok; }
 pstart		: PSTART        { yyerrok; }
+pclassname      : PCLASSNAME    { yyerrok; }
+pclassdef       : PCLASSDEF     { yyerrok; }
 pprec		: PPREC
 pp		: PP	        { yyerrok; }
 lcurl		: LCURL
@@ -267,6 +269,10 @@ def		: pstart id
 		| ptype tag nonterm_list
 
                 | ptype tag
+
+                | pclassname    { (* Rely on custom lexer to add classname *) }
+
+                | pclassdef     { (* Rely on custom lexer to add classdef *) }
 
 		;
 
@@ -606,14 +612,14 @@ function yylex : integer;
     function lookup(key : String; var tok : integer) : boolean;
       (* table of Yacc keywords (unstropped): *)
       const
-        no_of_entries = 11;
-        max_entry_length = 8;
+        no_of_entries = 13;
+        max_entry_length = 9;
         keys : array [1..no_of_entries] of String[max_entry_length] = (
           '0', '2', 'binary', 'left', 'nonassoc', 'prec', 'right',
-          'start', 'term', 'token', 'type');
+          'start', 'term', 'token', 'type', 'classname', 'classdef');
         toks : array [1..no_of_entries] of integer = (
           PTOKEN, PNONASSOC, PNONASSOC, PLEFT, PNONASSOC, PPREC, PRIGHT,
-          PSTART, PTOKEN, PTOKEN, PTYPE);
+          PSTART, PTOKEN, PTOKEN, PTYPE, PCLASSNAME, PCLASSDEF);
       var m, n, k : integer;
       begin
         (* binary search: *)
@@ -636,6 +642,7 @@ function yylex : integer;
       end(*lookup*);
     var
       keywstr : String;
+      trail: String;
       tok : integer;
     begin
       inc(cno);
@@ -683,7 +690,29 @@ function yylex : integer;
                   inc(cno)
                 end;
               if lookup(keywstr, tok) then
-                scan_keyword := tok
+              begin
+                scan_keyword := tok;
+                if (scan_keyword = PCLASSNAME) or (scan_keyword = PCLASSDEF) then
+                begin
+                  if object_oriented then
+                  begin
+                    trail := Copy(line, cno, Length(Line) { will trunc });
+                    if (scan_keyword = PCLASSNAME) then
+                    begin
+                      trail := Trim(trail);
+                      if SetClassName(trail) <> 0 then
+                        scan_keyword := ILLEGAL;
+                    end
+                    else
+                    begin
+                      if AddClassDef(trail) <> 0 then
+                        scan_keyword := ILLEGAL;
+                    end;
+                  end
+                  else
+                    scan_keyword := ILLEGAL;
+                end
+              end
               else
                 scan_keyword := ILLEGAL
             end;
@@ -755,7 +784,9 @@ begin
 
   for i := 1 to paramCount do
     if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-V' then
+      if upper(paramStr(i))='-OO' then
+        object_oriented := true
+      else if upper(paramStr(i))='-V' then
         verbose := true
       else if upper(paramStr(i))='-D' then
         debug := true
@@ -797,12 +828,19 @@ begin
 
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
-  codfilename := codfilepath + 'yyparse.cod';
+  if object_oriented then
+    codfilename := codfilepath + 'yyparse.cod'
+  else
+    codfilename := codfilepath + 'yyparse_oo.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'..\..\yyparse.cod';
+      if object_oriented then
+        codfilename := codfilepath+'..\..\yyparse_oo.cod'
+      else
+        codfilename := codfilepath+'..\..\yyparse.cod';
+
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
