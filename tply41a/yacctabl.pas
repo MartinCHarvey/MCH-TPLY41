@@ -277,7 +277,6 @@ PropTable = array [1..max_items] of PropList;
 
 var
 
-experiment        : Boolean;          (* status of the experimental option *)
 verbose           : Boolean;          (* status of the verbose option *)
 debug             : Boolean;          (* status of the debug option *)
 startnt           : Integer;          (* start nonterminal of grammar
@@ -926,7 +925,6 @@ procedure sort_item_set ( var item_set : ItemSet );
 var i : Integer;
 
 begin
-  experiment       := false;
   verbose          := false;
   debug            := false;
   startnt          := 0;

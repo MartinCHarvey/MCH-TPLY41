@@ -6,21 +6,22 @@ unit
 
 interface
 
-{$DEFINE OO_LEXLIB}
-
 uses
   calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
 
-{$DEFINE INSERT_IMPLEMENTATION_CALUSE}
-
-var
-  yyp_result: integer;
-  lastIdent, lastDef: string;
-  identList: TStringList;
-
-  procedure AddDef(ident:string; val: integer);
-  function lookupLastIdent: integer;
 %}
+
+
+%classname TCalcParser
+%classdef  yyp_result: integer;
+%classdef  lastIdent, lastDef: string;
+%classdef  identList: TStringList;
+%classdef  Lexer: TCalcLexer;
+%classdef
+%classdef  procedure AddDef(ident:string; val: integer);
+%classdef  function lookupLastIdent: integer;
+%classdef  constructor Create;
+%classdef  destructor Destroy; override;
 
 %token
         _number
@@ -89,7 +90,7 @@ number          :
 
 %%
 
-procedure AddDef(ident:string; val: integer);
+procedure TCalcParser.AddDef(ident:string; val: integer);
 begin
   if IdentList.IndexOf(ident) >= 0 then
   begin
@@ -100,7 +101,7 @@ begin
         IdentList.AddObject(ident, Pointer(val));
 end;
 
-function lookupLastIdent: integer;
+function TCalcParser.lookupLastIdent: integer;
 var
   Idx: integer;
 begin
@@ -115,9 +116,20 @@ begin
     result := Integer(IdentList.Objects[Idx]);
 end;
 
-initialization
+constructor TCalcParser.Create;
+begin
+  inherited;
   IdentList := TStringList.Create;
-finalization
+  Lexer := TCalcLexer.Create;
+  //TODO - Init / reset?
+end;
+
+destructor TCalcParser.Destroy;
+begin
+  Lexer.Free;
   IdentList.Free;
+  inherited;
+end;
+
 end.
 

@@ -88,7 +88,7 @@ $History: YACC.PAS $
 
    -d  "Debug:" Yacc generates parser with debugging output.
 
-   -x  "Experimental:" MCH extra experimental checking.
+   -oo "Object-Oriented:" Use OO syntax and templates.
 
    Description
 
@@ -755,9 +755,7 @@ begin
 
   for i := 1 to paramCount do
     if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-X' then
-        experiment := true
-      else if upper(paramStr(i))='-V' then
+      if upper(paramStr(i))='-V' then
         verbose := true
       else if upper(paramStr(i))='-D' then
         debug := true
@@ -834,9 +832,8 @@ begin
 
   (* print statistics: *)
 
-  if experiment then
-    if undefined_nt > 0 then
-      writeln(undefined_nt, ' undefined nonterminals.');
+  if undefined_nt > 0 then
+    writeln(undefined_nt, ' undefined nonterminals.');
   if errors>0 then
     writeln( lno, ' lines, ',
              errors, ' errors found.' )
