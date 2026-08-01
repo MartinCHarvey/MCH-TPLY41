@@ -75,8 +75,8 @@ uses
 {$IFDEF Windows}
   WinCrt,
 {$ENDIF}
-  LexBase, LexTable, LexPos, LexDFA, LexOpt, LexList, LexRules, LexMsgs;
-
+  LexBase, LexTable, LexPos, LexDFA, LexOpt, LexList, LexRules, LexMsgs,
+  ClassDefs;
 
 procedure get_line;
   (* obtain line from source file *)
@@ -99,7 +99,8 @@ procedure next_section;
 
 (* Semantic routines: *)
 
-var n_rules : Integer; (* current number of rules *)
+var
+  n_rules : Integer; (* current number of rules *)
 
 procedure define_start_state ( symbol : String; pos : Integer );
   (* process start state definition *)
@@ -495,6 +496,36 @@ procedure code;
     error(unmatched_lbrace, length(line)+1);
   end(*code*);
 
+procedure oo_classdefs;
+var
+  Tmp: string;
+  i, ret: integer;
+begin
+  if object_oriented then
+  begin
+    if GetClassName(Tmp) <> 0 then
+    begin
+      error('OO output requires class name', 0);
+      exit;
+    end;
+    writeln(yyout, 'type');
+    writeln(yyout, '  ' + Tmp + ' = class(TPLYLexer)');
+    writeln(yyout, '    public');
+    writeln(yyout, '      function yylex: integer; override;');
+    i := 0;
+    repeat
+      ret := GetClassDef(i, Tmp);
+      if ret = 0 then
+        writeln(yyout, '      ' + Tmp);
+      Inc(i);
+    until ret <> 0;
+    writeln(yyout, '  end;');
+    writeln(yyout);
+    writeln(yyout, 'implementation');
+    writeln(yyout);
+  end;
+end;
+
 procedure definitions;
   procedure definition;
     function check_id ( symbol : String ) : Boolean;
@@ -518,7 +549,27 @@ procedure definitions;
     begin
       split(line, 2);
       com := upper(itemv(1));
-      if (com='%S') or (com='%START') then
+      if com = '%CLASSNAME' then
+      begin
+        if object_oriented then
+        begin
+        if SetClassName(itemv(2)) <> 0 then
+          error('Multiple classname definitions', 0);
+        end
+        else
+          error('Error: must run with -oo for object_oriented output', 0);
+      end
+      else if com = '%CLASSDEF' then
+      begin
+        if object_oriented then
+        begin
+          if AddClassDef(itemv(2)) <> 0 then
+            error('Error adding class definition', 0);
+        end
+        else
+          error('Error: must run with -oo for object_oriented output', 0);
+      end
+      else if (com='%S') or (com='%START') then
         begin
           split(line, max_items);
           for i := 2 to itemc do
@@ -539,7 +590,7 @@ procedure definitions;
         if line='' then
           writeln(yyout)
         else if line='%%' then
-          exit
+          break
         else if line='%{' then
           code
         else if (line[1]='%') or (line[1] in letters) then
@@ -547,47 +598,94 @@ procedure definitions;
         else
           writeln(yyout, line)
       end;
+    oo_classdefs;
   end(*definitions*);
 
+
+procedure oo_funcdef;
+var
+  Tmp: string;
+  ret: integer;
+begin
+  if object_oriented then
+  begin
+    ret := GetClassName(Tmp);
+    if ret <> 0 then
+    begin
+      error('Expected classname to be set.' ,0);
+      exit;
+    end;
+    writeln(yyout);
+    writeln(yyout, 'function ' + Tmp + '.yylex : Integer;');
+    writeln(yyout);
+    writeln(yyout, 'procedure yyaction ( yyruleno : Integer );');
+    writeln(yyout);
+  end;
+end;
+
 procedure rules;
+  var
+    firstline: boolean;
   begin
     next_section;
+    firstline := false;
     if line='%%' then
+    begin
+      (* Before rules, expect only whitespace and code *)
       while not eof(yyin) do
+      begin
+        get_line;
+        if line='' then
+          writeln(yyout)
+        else if line='%{' then
+          code
+        else
         begin
-          get_line;
-          if line='' then
-            writeln(yyout)
-          else if line='%%' then
-            begin
-              next_section;
-              exit;
-            end
-          else if line='%{' then
-            code
-          else if (line[1]<>' ') and (line[1]<>tab) then
-            begin
-              if n_rules=0 then next_section;
-              inc(n_rules);
-              parse_rule(n_rules);
-              if errors=0 then
-                begin
-                  add_rule;
-                  write(yyout, '  ', n_rules);
-                  if strip(stmt)='|' then
-                    writeln(yyout, ',')
-                  else
-                    begin
-                      writeln(yyout, ':');
-                      writeln(yyout, blankStr(expr), stmt);
-                    end;
-                end
-            end
-          else
-            writeln(yyout, line)
-        end
+          firstline := true;
+          break;
+        end;
+      end;
+    end
     else
       error(unexpected_eof, length(line)+1);
+    oo_funcdef;
+      //todo - eof / getline.
+      while firstline or not eof(yyin) do
+      begin
+        if not firstline then
+          get_line
+        else
+          firstline := false;
+        if line='' then
+          writeln(yyout)
+        else if line='%%' then
+          begin
+            next_section;
+            exit;
+          end
+        else if line='%{' then
+          code
+        else if (line[1]<>' ') and (line[1]<>tab) then
+          begin
+            if n_rules=0 then next_section;
+            inc(n_rules);
+            parse_rule(n_rules);
+            if errors=0 then
+              begin
+                add_rule;
+                write(yyout, '  ', n_rules);
+                if strip(stmt)='|' then
+                  writeln(yyout, ',')
+                else
+                  begin
+                    writeln(yyout, ':');
+                    writeln(yyout, blankStr(expr), stmt);
+                  end;
+              end
+          end
+        else
+          writeln(yyout, line)
+      end;
     next_section;
   end(*rules*);
 
@@ -606,7 +704,9 @@ procedure auxiliary_procs;
 
 (* Main program: *)
 
-var i : Integer;
+var
+  i : Integer;
+  tmp: string;
 
 begin
 {$ifdef linux}
@@ -635,6 +735,8 @@ begin
     if copy(paramStr(i), 1, 1)='-' then
       if upper(paramStr(i))='-V' then
         verbose := true
+      else if upper(paramStr(i))='-OO' then
+        object_oriented := true
       else if upper(paramStr(i))='-O' then
         optimize := true
       else
@@ -673,14 +775,25 @@ begin
   rewrite(yyout); if ioresult<>0 then fatal(cannot_open_file+pasfilename);
   rewrite(yylst); if ioresult<>0 then fatal(cannot_open_file+lstfilename);
 
+  (* Open code template once we have read definitions, and determined whether
+     OO template is required or not. *)
+
   (* search code template in current directory, then on path where Lex
      was executed from: *)
-  codfilename := codfilepath + 'yylex.cod';
+  if object_oriented then
+    codfilename := codfilepath + 'yylex_oo.cod'
+  else
+    codfilename := codfilepath + 'yylex.cod';
+
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'..\..\yylex.cod';
+      if object_oriented then
+        codfilename := codfilepath+'..\..\yylex_oo.cod'
+      else
+        codfilename := codfilepath+'..\..\yylex.cod';
+
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
@@ -694,6 +807,7 @@ begin
   first_pos_table^[1] := newIntSet;
   writeln('parse definitions ...');
   definitions;
+
   writeln('parse rules...');
   rules;
   writeln('done parsing.');

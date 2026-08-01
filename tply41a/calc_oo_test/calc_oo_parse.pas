@@ -1,5 +1,5 @@
 
-(* Yacc parser template (TP Yacc V3.0), V1.2 6-17-91 AG *)
+(* Yacc parser template (TP Yacc V3.0), V1.2 6-17-91 AG MCH OO Mod 1 *)
 
 (* global definitions: *)
 
@@ -9,20 +9,9 @@ unit
 
 interface
 
-{$DEFINE OO_LEXLIB}
-
 uses
   calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
 
-{$DEFINE INSERT_IMPLEMENTATION_CALUSE}
-
-var
-  yyp_result: integer;
-  lastIdent, lastDef: string;
-  identList: TStringList;
-
-  procedure AddDef(ident:string; val: integer);
-  function lookupLastIdent: integer;
 const _number = 257;
 const _plus = 258;
 const _minus = 259;
@@ -33,29 +22,38 @@ const _rparen = 263;
 const _ident = 264;
 const _semi = 265;
 const _eq = 266;
+{ oo_def }
+type
+  TCalcParser = class (TPLYParser)
+    public
+{ oo_classvars }
+      yyp_result: integer;
+      lastIdent, lastDef: string;
+      identList: TStringList;
+      Lexer: TCalcLexer;
+{.cod}
 
-var yylval : YYSType;
+  yystate, yysp, yyn : Integer;
+  yys : array [1..yymaxdepth] of Integer;
+  yyv : array [1..yymaxdepth] of YYSType;
+  yyval : YYSType;
+  yylval : YYSType;
 
-{$IFNDEF INSERT_IMPLEMENTATION_CALUSE}
-function yylex : Integer; forward;
-{$ENDIF}
+  function yyparse : Integer;
 
-function yyparse : Integer;
+{ oo_classfuncs }
+      procedure AddDef(ident:string; val: integer);
+      function lookupLastIdent: integer;
+      constructor Create;
+      destructor Destroy; override;
+{ oo_impl }
+  end;
 
-{$IFDEF INSERT_IMPLEMENTATION_CALUSE}
 implementation
 
-function yyparse : Integer;
-
-{$ENDIF}
-
-var yystate, yysp, yyn : Integer;
-    yys : array [1..yymaxdepth] of Integer;
-    yyv : array [1..yymaxdepth] of YYSType;
-    yyval : YYSType;
+function TCalcParser.yyparse : Integer;
 
 procedure yyaction ( yyruleno : Integer );
-  (* local definitions: *)
 begin
   (* actions: *)
   case yyruleno of
@@ -81,7 +79,7 @@ begin
          yyval := yyv[yysp-1];
        end;
    8 : begin
-         lastIdent := yytoken_text; 
+         lastIdent := Lexer.yytoken_text; 
        end;
    9 : begin
          yyval := yyv[yysp-0]; 
@@ -114,7 +112,7 @@ begin
          yyval := lookupLastIdent; 
        end;
   19 : begin
-         yyval := StrToInt(string(yytoken_text)); 
+         yyval := StrToInt(string(Lexer.yytoken_text)); 
        end;
   end;
 end(*yyaction*);
@@ -581,7 +579,7 @@ next:
   if (yyd[yystate]=0) and (yychar=-1) then
     (* get next symbol *)
     begin
-      yychar := yylex; if yychar<0 then yychar := 0;
+      yychar := Lexer.yylex; if yychar<0 then yychar := 0;
     end;
 
   if yydebug then writeln('state ', yystate, ', char ', yychar);
@@ -674,7 +672,7 @@ abort:
 end(*yyparse*);
 
 
-procedure AddDef(ident:string; val: integer);
+procedure TCalcParser.AddDef(ident:string; val: integer);
 begin
   if IdentList.IndexOf(ident) >= 0 then
   begin
@@ -685,7 +683,7 @@ begin
         IdentList.AddObject(ident, Pointer(val));
 end;
 
-function lookupLastIdent: integer;
+function TCalcParser.lookupLastIdent: integer;
 var
   Idx: integer;
 begin
@@ -700,8 +698,19 @@ begin
     result := Integer(IdentList.Objects[Idx]);
 end;
 
-initialization
+constructor TCalcParser.Create;
+begin
+  inherited;
   IdentList := TStringList.Create;
-finalization
+  Lexer := TCalcLexer.Create;
+  //TODO - Init / reset?
+end;
+
+destructor TCalcParser.Destroy;
+begin
+  Lexer.Free;
   IdentList.Free;
+  inherited;
+end;
+
 end.

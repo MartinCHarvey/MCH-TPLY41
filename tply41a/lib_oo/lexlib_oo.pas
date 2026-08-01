@@ -9,6 +9,9 @@ unit LexLib_oo;
 interface
 
 uses
+{$IFDEF USE_TRACKABLES}
+  Trackables,
+{$ENDIF}
   lexdstr;
 
 (* The Lex library unit supplies a collection of variables and routines
@@ -42,144 +45,175 @@ uses
    target application (use the Turbo Pascal standard routines assign,
    reset, and rewrite for this purpose). *)
 
-var
+const
+  max_matches = 1024;
+  max_rules   = 256;
 
-yyinput, yyoutput : Text;        (* input and output file *)
-yyline            : ModeratelyLargeString;      (* current input line *)
-yylineno, yycolno : Integer;     (* current input position *)
-yytokenlineno, yytokencolno : Integer;     (* last token processed OK *)
-yyprevtokenlineno, yyprevtokencolno : Integer;     (* previous token processed *)
-yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
-yyleng            : Word;         (* length of matched text *)
-yytoken_overrun   : Boolean;
-yywrapped         : Boolean;
+type
+{$IFDEF USE_TRACKABLES}
+  TPLYLexer = class(TTrackable)
+{$ELSE}
+  TPLYLexer = class
+{$ENDIF}
+  protected
+    yystate    : Integer; (* current state of lexical analyzer *)
+    yyactchar  : AnsiChar;    (* current character *)
+    yylastchar : AnsiChar;    (* last matched character (#0 if none) *)
+    yyrule     : Integer; (* matched rule *)
+    yyreject   : Boolean; (* current match rejected? *)
+    yydone     : Boolean; (* yylex return value set? *)
+    yyretval   : Integer; (* yylex return value *)
+    _yytoken_text: AnsiString;
+    _yyprevtoken_text: AnsiString;
+    bufptr : Integer;
+    buf    : ModeratelyLargeString;
 
-(* I/O routines:
+    { TODO - Sort out nastiness of yyline,
+      yytext, yystext, buf, etc etc }
 
-   The following routines get_char, unget_char and put_char are used to
-   implement access to the input and output files. Since \n (newline) for
-   Lex means line end, the I/O routines have to translate MS-DOS line ends
-   (carriage-return/line-feed) into newline characters and vice versa. Input
-   is buffered to allow rescanning text (via unput_char).
+    yystext            : ModeratelyLargeString;
+    yysstate, yylstate : Integer;
+    yymatches          : Integer;
+    yystack            : array [1..max_matches] of Integer;
+    yypos              : array [1..max_rules] of Integer;
+    yysleng            : Word;
 
-   The input buffer holds the text of the line to be scanned. When the input
-   buffer empties, a new line is obtained from the input stream. Characters
-   can be returned to the input buffer by calls to unget_char. At end-of-
-   file a null character is returned.
 
-   The input routines also keep track of the input position and set the
-   yyline, yylineno, yycolno variables accordingly.
+    procedure yynew;
+      (* starts next match; initializes state information of the lexical
+         analyzer *)
 
-   Since the rest of the Lex library only depends on these three routines
-   (there are no direct references to the yyinput and yyoutput files or
-   to the input buffer), you can easily replace get_char, unget_char and
-   put_char by another suitable set of routines, e.g. if you want to read
-   from/write to memory, etc. *)
+    procedure yyscan;
+      (* gets next character from the input stream and updates yytext and
+         yyactchar accordingly *)
 
-function get_char : AnsiChar;
-  (* obtain one character from the input file (null character at end-of-
-     file) *)
+    procedure yymark ( n : Integer );
+      (* marks position for rule no. n *)
 
-procedure unget_char ( c : AnsiChar );
-  (* return one character to the input file to be reread in subsequent calls
-     to get_char *)
+    procedure yymatch ( n : Integer );
+      (* declares a match for rule number n *)
 
-procedure put_char ( c : AnsiChar );
-  (* write one character to the output file *)
+    function yyfind ( var n : Integer ) : Boolean;
+      (* finds the last match and the corresponding marked position and adjusts
+         the matched string accordingly; returns:
+         - true if a rule has been matched, false otherwise
+         - n: the number of the matched rule *)
 
-(* Utility routines: *)
+    function yydefault : Boolean;
+      (* executes the default action (copy character); returns true unless
+         at end-of-file *)
 
-procedure echo;
-  (* echoes the current match to the output stream *)
+    procedure yyclear;
+      (* reinitializes state information after lexical analysis has been
+         finished *)
 
-procedure yymore;
-  (* append the next match to the current one *)
+    function get_yytoken_text: AnsiString;
+  public
+    yyinput, yyoutput : Text;        (* input and output file *)
+    yyline            : ModeratelyLargeString;      (* current input line *)
+    yylineno, yycolno : Integer;     (* current input position *)
+    yytokenlineno, yytokencolno : Integer;     (* last token processed OK *)
+    yyprevtokenlineno, yyprevtokencolno : Integer;     (* previous token processed *)
+    yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
+    yyleng            : Word;         (* length of matched text *)
+    yytoken_overrun   : Boolean;
+    yywrapped         : Boolean;
 
-procedure yyless ( n : Integer );
-  (* truncate yytext to size n and return the remaining characters to the
-     input stream *)
+    constructor Create;
+    destructor Destroy; override;
 
-procedure reject;
-  (* reject the current match and execute the next one *)
+    (* I/O routines:
 
-  (* reject does not actually cause the input to be rescanned; instead,
-     internal state information is used to find the next match. Hence
-     you should not try to modify the input stream or the yytext variable
-     when rejecting a match. *)
+       The following routines get_char, unget_char and put_char are used to
+       implement access to the input and output files. Since \n (newline) for
+       Lex means line end, the I/O routines have to translate MS-DOS line ends
+       (carriage-return/line-feed) into newline characters and vice versa. Input
+       is buffered to allow rescanning text (via unput_char).
 
-procedure return ( n : Integer );
-procedure returnc ( c : AnsiChar );
-  (* sets the return value of yylex *)
+       The input buffer holds the text of the line to be scanned. When the input
+       buffer empties, a new line is obtained from the input stream. Characters
+       can be returned to the input buffer by calls to unget_char. At end-of-
+       file a null character is returned.
 
-procedure start ( state : Integer );
-  (* puts the lexical analyzer in the given start state; state=0 denotes
-     the default start state, other values are user-defined *)
+       The input routines also keep track of the input position and set the
+       yyline, yylineno, yycolno variables accordingly.
 
-(* yywrap:
+       Since the rest of the Lex library only depends on these three routines
+       (there are no direct references to the yyinput and yyoutput files or
+       to the input buffer), you can easily replace get_char, unget_char and
+       put_char by another suitable set of routines, e.g. if you want to read
+       from/write to memory, etc. *)
 
-   The yywrap function is called by yylex at end-of-file (unless you have
-   specified a rule matching end-of-file). You may redefine this routine
-   in your Lex program to do application-dependent processing at end of
-   file. In particular, yywrap may arrange for more input and return false
-   in which case the yylex routine resumes lexical analysis. *)
+    function get_char : AnsiChar;
+      (* obtain one character from the input file (null character at end-of-
+         file) *)
 
-function yywrap : Boolean;
-  (* The default yywrap routine supplied here closes input and output files
-     and returns true (causing yylex to terminate). *)
+    procedure unget_char ( c : AnsiChar );
+      (* return one character to the input file to be reread in subsequent calls
+         to get_char *)
 
-(* The following are the internal data structures and routines used by the
-   lexical analyzer routine yylex; they should not be used directly. *)
+    procedure put_char ( c : AnsiChar );
+      (* write one character to the output file *)
 
-function yytoken_text: AnsiString;
-function yyprevtoken_text: AnsiString;
-procedure update_token_text;
+    (* Utility routines: *)
 
-var
+    procedure echo;
+      (* echoes the current match to the output stream *)
 
-yystate    : Integer; (* current state of lexical analyzer *)
-yyactchar  : AnsiChar;    (* current character *)
-yylastchar : AnsiChar;    (* last matched character (#0 if none) *)
-yyrule     : Integer; (* matched rule *)
-yyreject   : Boolean; (* current match rejected? *)
-yydone     : Boolean; (* yylex return value set? *)
-yyretval   : Integer; (* yylex return value *)
-_yytoken_text: AnsiString;
-_yyprevtoken_text: AnsiString;
+    procedure yymore;
+      (* append the next match to the current one *)
 
-procedure yynew;
-  (* starts next match; initializes state information of the lexical
-     analyzer *)
+    procedure yyless ( n : Integer );
+      (* truncate yytext to size n and return the remaining characters to the
+         input stream *)
 
-procedure yyscan;
-  (* gets next character from the input stream and updates yytext and
-     yyactchar accordingly *)
+    procedure reject;
+      (* reject the current match and execute the next one *)
 
-procedure yymark ( n : Integer );
-  (* marks position for rule no. n *)
+      (* reject does not actually cause the input to be rescanned; instead,
+         internal state information is used to find the next match. Hence
+         you should not try to modify the input stream or the yytext variable
+         when rejecting a match. *)
 
-procedure yymatch ( n : Integer );
-  (* declares a match for rule number n *)
+    procedure return ( n : Integer );
+    procedure returnc ( c : AnsiChar );
+      (* sets the return value of yylex *)
 
-function yyfind ( var n : Integer ) : Boolean;
-  (* finds the last match and the corresponding marked position and adjusts
-     the matched string accordingly; returns:
-     - true if a rule has been matched, false otherwise
-     - n: the number of the matched rule *)
+    procedure start ( state : Integer );
+      (* puts the lexical analyzer in the given start state; state=0 denotes
+         the default start state, other values are user-defined *)
 
-function yydefault : Boolean;
-  (* executes the default action (copy character); returns true unless
-     at end-of-file *)
+    (* yywrap:
 
-procedure yyclear;
-  (* reinitializes state information after lexical analysis has been
-     finished *)
+       The yywrap function is called by yylex at end-of-file (unless you have
+       specified a rule matching end-of-file). You may redefine this routine
+       in your Lex program to do application-dependent processing at end of
+       file. In particular, yywrap may arrange for more input and return false
+       in which case the yylex routine resumes lexical analysis. *)
+
+    function yywrap : Boolean;
+      (* The default yywrap routine supplied here closes input and output files
+         and returns true (causing yylex to terminate). *)
+
+    (* The following are the internal data structures and routines used by the
+       lexical analyzer routine yylex; they should not be used directly. *)
+
+    function yytoken_text: AnsiString;
+    function yyprevtoken_text: AnsiString;
+    procedure update_token_text;
+
+    function yylex: integer; virtual; abstract;
+
+    procedure fatal ( msg : String ); virtual;
+  end;
+
 
 implementation
 
 uses
   AnsiStrings;
 
-function get_yytoken_text: AnsiString;
+function TPLYLexer.get_yytoken_text: AnsiString;
 var
   StartPos: integer;
 begin
@@ -196,7 +230,7 @@ begin
   end;
 end;
 
-procedure update_token_text;
+procedure TPLYLexer.update_token_text;
 begin
   _yyprevtoken_text := _yytoken_text;
   _yytoken_text := get_yytoken_text; { May be zero/garbage if token not recognised }
@@ -208,18 +242,18 @@ begin
     Dec(yycolno);         { Assuming the error is not recognising cr/lf }
 end;
 
-function yytoken_text: AnsiString;
+function TPLYLexer.yytoken_text: AnsiString;
 begin
   result := _yytoken_text;
 end;
 
-function yyprevtoken_text: AnsiString;
+function TPLYLexer.yyprevtoken_text: AnsiString;
 begin
   result := _yyprevtoken_text;
 end;
 
 
-procedure fatal ( msg : String );
+procedure TPLYLexer.fatal ( msg : String );
   (* writes a fatal error message and halts program *)
   begin
     writeln(yyoutput, 'LexLib: ', msg);
@@ -230,12 +264,7 @@ procedure fatal ( msg : String );
 
 const nl = #10;  (* newline character *)
 
-var
-
-bufptr : Integer;
-buf    : ModeratelyLargeString;
-
-function get_char : AnsiChar;
+function TPLYLexer.get_char : AnsiChar;
   var i : Integer;
       UniLine: string;
       SLen: integer;
@@ -278,7 +307,7 @@ function get_char : AnsiChar;
       get_char := #0;
   end(*get_char*);
 
-procedure unget_char ( c : AnsiChar );
+procedure TPLYLexer.unget_char ( c : AnsiChar );
   begin
     if bufptr >= Pred(BIGGER_STRING_LEN) then fatal('input buffer overflow');
     inc(bufptr);
@@ -286,7 +315,7 @@ procedure unget_char ( c : AnsiChar );
     buf[bufptr] := c;
   end(*unget_char*);
 
-procedure put_char ( c : AnsiChar );
+procedure TPLYLexer.put_char ( c : AnsiChar );
   begin
     if c=#0 then
       { ignore }
@@ -315,36 +344,23 @@ procedure put_char ( c : AnsiChar );
    - yysleng: copy of the original yyleng used to restore state information
      when reject is used *)
 
-const
-
-max_matches = 1024;
-max_rules   = 256;
-
-var
-
-yystext            : ModeratelyLargeString;
-yysstate, yylstate : Integer;
-yymatches          : Integer;
-yystack            : array [1..max_matches] of Integer;
-yypos              : array [1..max_rules] of Integer;
-yysleng            : Word;
 
 (* Utilities: *)
 
-procedure echo;
+procedure TPLYLexer.echo;
   var i : Integer;
   begin
     for i := 1 to yyleng do
       put_char(yytext[i])
   end(*echo*);
 
-procedure yymore;
+procedure TPLYLexer.yymore;
   begin
     yystext := yytext;
     yysleng := yyleng;
   end(*yymore*);
 
-procedure yyless ( n : Integer );
+procedure TPLYLexer.yyless ( n : Integer );
   var i : Integer;
   begin
     for i := yyleng downto n+1 do
@@ -352,7 +368,7 @@ procedure yyless ( n : Integer );
     yyleng := n;
   end(*yyless*);
 
-procedure reject;
+procedure TPLYLexer.reject;
   var i : Integer;
   begin
     yyreject := true;
@@ -362,26 +378,26 @@ procedure reject;
     dec(yymatches);
   end(*reject*);
 
-procedure return ( n : Integer );
+procedure TPLYLexer.return ( n : Integer );
   begin
     yyretval := n;
     yydone := true;
   end(*return*);
 
-procedure returnc ( c : AnsiChar );
+procedure TPLYLexer.returnc ( c : AnsiChar );
   begin
     yyretval := ord(c);
     yydone := true;
   end(*returnc*);
 
-procedure start ( state : Integer );
+procedure TPLYLexer.start ( state : Integer );
   begin
     yysstate := state;
   end(*start*);
 
 (* yywrap: *)
 
-function yywrap : Boolean;
+function TPLYLexer.yywrap : Boolean;
   begin
     close(yyinput); close(yyoutput);
     yywrap := true;
@@ -390,7 +406,7 @@ function yywrap : Boolean;
 
 (* Internal routines: *)
 
-procedure yynew;
+procedure TPLYLexer.yynew;
   begin
     if yylastchar<>#0 then
       if yylastchar=nl then
@@ -407,7 +423,7 @@ procedure yynew;
     yydone := false;
   end(*yynew*);
 
-procedure yyscan;
+procedure TPLYLexer.yyscan;
   begin
     if yyleng >= Pred(BIGGER_STRING_LEN) then fatal('yytext overflow');
     yyactchar := get_char;
@@ -415,20 +431,20 @@ procedure yyscan;
     yytext[yyleng] := yyactchar;
   end(*yyscan*);
 
-procedure yymark ( n : Integer );
+procedure TPLYLexer.yymark ( n : Integer );
   begin
     if n>max_rules then fatal('too many rules');
     yypos[n] := yyleng;
   end(*yymark*);
 
-procedure yymatch ( n : Integer );
+procedure TPLYLexer.yymatch ( n : Integer );
   begin
     inc(yymatches);
     if yymatches>max_matches then fatal('match stack overflow');
     yystack[yymatches] := n;
   end(*yymatch*);
 
-function yyfind ( var n : Integer ) : Boolean;
+function TPLYLexer.yyfind ( var n : Integer ) : Boolean;
   begin
     yyreject := false;
     while (yymatches>0) and (yypos[yystack[yymatches]]=0) do
@@ -453,7 +469,7 @@ function yyfind ( var n : Integer ) : Boolean;
       end
   end(*yyfind*);
 
-function yydefault : Boolean;
+function TPLYLexer.yydefault : Boolean;
   begin
     yyreject := false;
     yyactchar := get_char;
@@ -470,7 +486,7 @@ function yydefault : Boolean;
     yylastchar := yyactchar;
   end(*yydefault*);
 
-procedure yyclear;
+procedure TPLYLexer.yyclear;
   begin
     bufptr := 0;
     yysstate := 0;
@@ -482,9 +498,19 @@ procedure yyclear;
     yysleng := 0;
   end(*yyclear*);
 
+constructor TPLYLexer.Create;
 begin
+  inherited;
   FillChar(yyinput, sizeof(yyinput), 0);
   FillChar(yyoutput, sizeof(yyoutput), 0);
   yylineno := 0;
   yyclear;
+end;
+
+destructor TPLYLexer.Destroy;
+begin
+  yywrap;
+  inherited;
+end;
+
 end(*LexLib*).

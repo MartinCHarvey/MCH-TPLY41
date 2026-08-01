@@ -1,22 +1,17 @@
 
-(* Yacc parser template (TP Yacc V3.0), V1.2 6-17-91 AG *)
+(* Yacc parser template (TP Yacc V3.0), V1.2 6-17-91 AG MCH OO Mod 1 *)
 
 (* global definitions: *)
 %%
 
-var yylval : YYSType;
+  yystate, yysp, yyn : Integer;
+  yys : array [1..yymaxdepth] of Integer;
+  yyv : array [1..yymaxdepth] of YYSType;
+  yyval : YYSType;
+  yylval : YYSType;
 
-function yylex : Integer; forward;
+  function yyparse : Integer;
 
-function yyparse : Integer;
-
-var yystate, yysp, yyn : Integer;
-    yys : array [1..yymaxdepth] of Integer;
-    yyv : array [1..yymaxdepth] of YYSType;
-    yyval : YYSType;
-
-procedure yyaction ( yyruleno : Integer );
-  (* local definitions: *)
 %%
 begin
   (* actions: *)
@@ -91,7 +86,7 @@ next:
   if (yyd[yystate]=0) and (yychar=-1) then
     (* get next symbol *)
     begin
-      yychar := yylex; if yychar<0 then yychar := 0;
+      yychar := Lexer.yylex; if yychar<0 then yychar := 0;
     end;
 
   if yydebug then writeln('state ', yystate, ', char ', yychar);

@@ -7,98 +7,108 @@ unit YaccLib_oo;
 
 interface
 
+{$IFDEF USE_TRACKABLES}
+uses
+  Trackables,
+{$ENDIF}
+  lexlib_oo;
+
 const yymaxdepth = 1024;
   (* default stack size of parser *)
 
-type YYSType = Integer;
+
+type
+  YYSType = Integer;
   (* default value type, may be redefined in Yacc output file *)
 
-var
+{$IFDEF USE_TRACKABLES}
+  TPLYParser = class(TTrackable)
+{$ELSE}
+  TPLYParser = class
+{$ENDIF}
+  private
+    FLexer: TPLYLexer;
+  protected
+    yyflag    : ( yyfnone, yyfaccept, yyfabort, yyferror );
+    yyerrflag : Integer;
+  public
+    yychar   : Integer; (* current lookahead character *)
+    yynerrs  : Integer; (* current number of syntax errors reported by the
+                           parser *)
+    yydebug  : Boolean; (* set to true to enable debugging output of parser *)
 
-yychar   : Integer; (* current lookahead character *)
-yynerrs  : Integer; (* current number of syntax errors reported by the
-                       parser *)
-yydebug  : Boolean; (* set to true to enable debugging output of parser *)
+    procedure yyerror ( msg : String );
+      (* error message printing routine used by the parser *)
 
-procedure yyerror ( msg : String );
-  (* error message printing routine used by the parser *)
+    procedure yyclearin;
+      (* delete the current lookahead token *)
 
-procedure yyclearin;
-  (* delete the current lookahead token *)
+    procedure yyaccept;
+      (* trigger accept action of the parser; yyparse accepts returning 0, as if
+         it reached end of input *)
 
-procedure yyaccept;
-  (* trigger accept action of the parser; yyparse accepts returning 0, as if
-     it reached end of input *)
+    procedure yyabort;
+      (* like yyaccept, but causes parser to return with value 1, as if an
+         unrecoverable syntax error had been encountered *)
 
-procedure yyabort;
-  (* like yyaccept, but causes parser to return with value 1, as if an
-     unrecoverable syntax error had been encountered *)
+    procedure yyerrlab;
+      (* causes error recovery to be started, as if a syntax error had been
+         encountered *)
 
-procedure yyerrlab;
-  (* causes error recovery to be started, as if a syntax error had been
-     encountered *)
+    procedure yyerrok;
+      (* when in error mode, resets the parser to its normal mode of
+         operation *)
 
-procedure yyerrok;
-  (* when in error mode, resets the parser to its normal mode of
-     operation *)
-
-(* Flags used internally by the parser routine: *)
-
-var
-
-yyflag    : ( yyfnone, yyfaccept, yyfabort, yyferror );
-yyerrflag : Integer;
+    property Lexer: TPLYLexer read FLexer write FLexer;
+  end;
 
 implementation
 
-uses
-  lexlib_oo;
-
-procedure yyerror ( msg : String );
+procedure TPLYParser.yyerror ( msg : String );
   begin
-    if not yywrapped then
+    if not Lexer.yywrapped then
     begin
-      writeln(yyoutput, ' Line: ', yytokenlineno,
-                        ' Col: ', yytokencolno,
-                        ' Token: ''', yytoken_text,
-                        ''' PrevLine: ', yyprevtokenlineno,
-                        ' PrevCol: ', yyprevtokencolno,
-                        ' PrevToken: ''', yyprevtoken_text,
+      writeln(Lexer.yyoutput, ' Line: ', Lexer.yytokenlineno,
+                        ' Col: ', Lexer.yytokencolno,
+                        ' Token: ''', Lexer.yytoken_text,
+                        ''' PrevLine: ', Lexer.yyprevtokenlineno,
+                        ' PrevCol: ', Lexer.yyprevtokencolno,
+                        ' PrevToken: ''', Lexer.yyprevtoken_text,
                         ''' ', msg);
     end
     else
     begin
-      writeln(          ' Line: ', yytokenlineno,
-                        ' Col: ', yytokencolno,
-                        ' Token: ''', yytoken_text,
-                        ''' PrevLine: ', yyprevtokenlineno,
-                        ' PrevCol: ', yyprevtokencolno,
-                        ' PrevToken: ''', yyprevtoken_text,
+      writeln(          ' Line: ', Lexer.yytokenlineno,
+                        ' Col: ', Lexer.yytokencolno,
+                        ' Token: ''', Lexer.yytoken_text,
+                        ''' PrevLine: ', Lexer.yyprevtokenlineno,
+                        ' PrevCol: ', Lexer.yyprevtokencolno,
+                        ' PrevToken: ''', Lexer.yyprevtoken_text,
                         ''' ', msg);
     end;
   end(*yyerrmsg*);
 
-procedure yyclearin;
+procedure TPLYParser.yyclearin;
   begin
     yychar := -1;
   end(*yyclearin*);
 
-procedure yyaccept;
+procedure TPLYParser.yyaccept;
   begin
     yyflag := yyfaccept;
   end(*yyaccept*);
 
-procedure yyabort;
+procedure TPLYParser.yyabort;
   begin
     yyflag := yyfabort;
   end(*yyabort*);
 
-procedure yyerrlab;
+procedure TPLYParser.yyerrlab;
   begin
     yyflag := yyferror;
   end(*yyerrlab*);
 
-procedure yyerrok;
+procedure TPLYParser.yyerrok;
   begin
     yyerrflag := 0;
   end(*yyerrork*);

@@ -372,36 +372,31 @@ procedure build;
     for i := 2 to n_rules do
       if not reduced[i] then inc(never_reduced);
 
-    if experiment then
+    for i := 1 to n_nts do
     begin
-      for i := 1 to n_nts do
+      s := 0;
+      for j := 1 to n_rules do
       begin
-        s := 0;
-        for j := 1 to n_rules do
+        if rule_table^[j]^.lhs_sym = -i then
         begin
-          if rule_table^[j]^.lhs_sym = -i then
-          begin
-            s := 1;
-            break;
-          end;
-        end;
-        if s = 0 then
-        begin
-          Inc(undefined_nt);
-          j := sym_key^[-i];
-          if j <> 0 then
-            writeln(yylst, 'Undefined nonterminal: ' + sym_table^[j].pname.S);
+          s := 1;
+          break;
         end;
       end;
+      if s = 0 then
+      begin
+        Inc(undefined_nt);
+        j := sym_key^[-i];
+        if j <> 0 then
+          writeln(yylst, 'Undefined nonterminal: ' + sym_table^[j].pname.S);
+      end;
     end;
+
     if verbose then
       begin
         writeln(yylst);
-        if experiment then
-        begin
-          if undefined_nt > 0 then
-            writeln(yylst, undefined_nt, ' undefined nonterminals.');
-        end;
+        if undefined_nt > 0 then
+          writeln(yylst, undefined_nt, ' undefined nonterminals.');
         if shift_reduce>0 then
           writeln(yylst, shift_reduce, ' shift/reduce conflicts.');
         if reduce_reduce>0 then

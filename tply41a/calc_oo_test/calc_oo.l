@@ -6,21 +6,22 @@ unit
 
 interface
 
-{$DEFINE OO_LEXLIB}
-
 uses
   lexlib_oo;
 
-function yylex: integer;
-
-implementation
-
-uses
-  calc_oo_parse;
-
 %}
 
+%classname TCalcLexer
+%classdef  { Sample commented def }
+
 %%
+
+%{
+
+uses
+ calc_oo_parse;
+
+%}
 
 [A-Za-z][A-Za-z0-9_]+   return(_ident);
 [0-9]+                  return(_number);

@@ -88,7 +88,7 @@ $History: YACC.PAS $
 
    -d  "Debug:" Yacc generates parser with debugging output.
 
-   -x  "Experimental:" MCH extra experimental checking.
+   -oo "Object-Oriented:" Use OO syntax and templates.
 
    Description
 
@@ -160,7 +160,7 @@ uses
   WinCrt,
 {$ENDIF}
 {$ENDIF}
-  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars;
+  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars, YaccClassDefs;
 
 %}
 
@@ -173,7 +173,7 @@ uses
   LITERAL       /* single character literal */
   LITID         /* multiple character literal */
   NUMBER	/* nonnegative integers: {digit}+ */
-  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC
+  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC PCLASSNAME PCLASSVAR PCLASSFUNC
   		/* reserved words: PTOKEN=%token, etc. */
   PP		/* source sections separator %% */
   LCURL		/* curly braces: %{ and %} */
@@ -200,6 +200,9 @@ pright		: PRIGHT        { yyerrok; }
 pnonassoc	: PNONASSOC	{ yyerrok; }
 ptype		: PTYPE	        { yyerrok; }
 pstart		: PSTART        { yyerrok; }
+pclassname      : PCLASSNAME    { yyerrok; }
+pclassvar       : PCLASSVAR     { yyerrok; }
+pclassfunc      : PCLASSFUNC    { yyerrok; }
 pprec		: PPREC
 pp		: PP	        { yyerrok; }
 lcurl		: LCURL
@@ -222,7 +225,12 @@ eq		: '='
 grammar		: defs pp
 		  		{ sort_types;
                                   definitions;
-                                  next_section; }
+                                  oo_def;
+                                  oo_classvars;
+                                  writeln(yyout, '{.cod}');
+                                  next_section;
+                                  oo_classfuncs;
+                                  oo_impl; }
 		  rules
 		  		{ next_section;
                                   generate_parser;
@@ -267,6 +275,12 @@ def		: pstart id
 		| ptype tag nonterm_list
 
                 | ptype tag
+
+                | pclassname    { (* Rely on custom lexer to add classname *) }
+
+                | pclassvar     { (* Rely on custom lexer to add classvar *) }
+
+                | pclassfunc     { (* Rely on custom lexer to add classfunc *) }
 
 		;
 
@@ -606,13 +620,13 @@ function yylex : integer;
     function lookup(key : String; var tok : integer) : boolean;
       (* table of Yacc keywords (unstropped): *)
       const
-        no_of_entries = 11;
-        max_entry_length = 8;
+        no_of_entries = 14;
+        max_entry_length = 9;
         keys : array [1..no_of_entries] of String[max_entry_length] = (
-          '0', '2', 'binary', 'left', 'nonassoc', 'prec', 'right',
+          '0', '2', 'binary', 'classfunc', 'classname', 'classvar', 'left', 'nonassoc', 'prec', 'right',
           'start', 'term', 'token', 'type');
         toks : array [1..no_of_entries] of integer = (
-          PTOKEN, PNONASSOC, PNONASSOC, PLEFT, PNONASSOC, PPREC, PRIGHT,
+          PTOKEN, PNONASSOC, PNONASSOC, PCLASSFUNC, PCLASSNAME, PCLASSVAR, PLEFT, PNONASSOC, PPREC, PRIGHT,
           PSTART, PTOKEN, PTOKEN, PTYPE);
       var m, n, k : integer;
       begin
@@ -636,6 +650,7 @@ function yylex : integer;
       end(*lookup*);
     var
       keywstr : String;
+      trail: String;
       tok : integer;
     begin
       inc(cno);
@@ -683,7 +698,52 @@ function yylex : integer;
                   inc(cno)
                 end;
               if lookup(keywstr, tok) then
-                scan_keyword := tok
+              begin
+                if (tok = PCLASSNAME) or
+                   (tok = PCLASSFUNC) or
+                   (tok = PCLASSVAR) then
+                begin
+                  if object_oriented then
+                  begin
+                    trail := Copy(line, cno, Length(Line) { will trunc });
+                    if (tok = PCLASSNAME) then
+                    begin
+                      trail := Trim(trail);
+                      if SetClassName(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end
+                    else if (tok = PCLASSFUNC) then
+                    begin
+                      if AddClassFunc(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end
+                    else // tok = PCLASSVAR
+                    begin
+                      if AddClassVar(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end;
+                  end
+                  else
+                    scan_keyword := ILLEGAL; //Need oo mode to scan these.
+                end
+                else
+                  scan_keyword := tok;
+              end
               else
                 scan_keyword := ILLEGAL
             end;
@@ -755,8 +815,8 @@ begin
 
   for i := 1 to paramCount do
     if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-X' then
-        experiment := true
+      if upper(paramStr(i))='-OO' then
+        object_oriented := true
       else if upper(paramStr(i))='-V' then
         verbose := true
       else if upper(paramStr(i))='-D' then
@@ -799,12 +859,19 @@ begin
 
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
-  codfilename := codfilepath + 'yyparse.cod';
+  if object_oriented then
+    codfilename := codfilepath + 'yyparse_oo.cod'
+  else
+    codfilename := codfilepath + 'yyparse.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'..\..\yyparse.cod';
+      if object_oriented then
+        codfilename := codfilepath+'..\..\yyparse_oo.cod'
+      else
+        codfilename := codfilepath+'..\..\yyparse.cod';
+
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
@@ -834,9 +901,8 @@ begin
 
   (* print statistics: *)
 
-  if experiment then
-    if undefined_nt > 0 then
-      writeln(undefined_nt, ' undefined nonterminals.');
+  if undefined_nt > 0 then
+    writeln(undefined_nt, ' undefined nonterminals.');
   if errors>0 then
     writeln( lno, ' lines, ',
              errors, ' errors found.' )

@@ -1,7 +1,7 @@
 
-(* lexical analyzer template (TP Lex V3.0), V1.0 3-2-91 AG *)
+(* lexical analyzer template (TP Lex V3.0), V1.0 3-2-91 AG  - MCH OO Mod 1*)
 
-(* global definitions: *)
+  (* global definitions: *)
 
 
 unit
@@ -9,24 +9,33 @@ unit
 
 interface
 
-{$DEFINE OO_LEXLIB}
-
 uses
   lexlib_oo;
 
-function yylex: integer;
+
+
+type
+  TCalcLexer = class(TPLYLexer)
+    public
+      function yylex: integer; override;
+      { Sample commented def }
+  end;
 
 implementation
 
+
+  (* local definitions: *)
+
+
+
 uses
-  calc_oo_parse;
+ calc_oo_parse;
 
 
 
-function yylex : Integer;
+function TCalcLexer.yylex : Integer;
 
 procedure yyaction ( yyruleno : Integer );
-  (* local definitions: *)
 
 begin
   (* actions: *)
@@ -380,9 +389,7 @@ action:
 
   if not yydone then goto start;
 
-{$IFDEF OO_LEXLIB}
   update_token_text;
-{$ENDIF}
 
   yylex := yyretval;
 

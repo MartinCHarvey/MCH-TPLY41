@@ -5,7 +5,7 @@
         <FrameworkType>None</FrameworkType>
         <MainSource>pyacc.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Console</AppType>
@@ -80,7 +80,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <Debugger_RunParams>&quot;c:\MCH Stuff\Delphi XE Progs\Common\MemDB2\SQL92Grammar\SQL92Grammar.y&quot; -v</Debugger_RunParams>
+        <Debugger_RunParams>..\..\calc_oo_test\calc_oo.y ..\..\calc_oo_test\calc_oo_parse.pas ..\..\calc_oo_test\calc_oo_parse.lst -v -oo</Debugger_RunParams>
         <Manifest_File>None</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>

@@ -70,6 +70,11 @@ function litsym ( k : Integer; n : Integer ) : Integer;
 procedure next_section;
   (* find next section mark (%%) in code template *)
 
+procedure oo_def;
+procedure oo_classvars;
+procedure oo_classfuncs;
+procedure oo_impl;
+
 procedure definitions;
   (* if necessary, write out definition of the semantic value type YYSType *)
 
@@ -110,7 +115,7 @@ procedure generate_parser;
 implementation
 
 uses YaccBase, YaccTabl, YaccClos, YaccLR0, YaccLook,
-  YaccPars, YaccMsgs;
+  YaccPars, YaccMsgs, YaccClassDefs;
 
 procedure yyerror ( msg : String );
   begin
@@ -261,6 +266,81 @@ procedure next_section;
         writeln(yyout, line);
       end;
   end(*next_section*);
+
+procedure oo_def;
+var
+  Tmp: string;
+begin
+  if object_oriented then
+  begin
+    WriteLn(yyout, '{ oo_def }');
+    WriteLn(yyout, 'type');
+    if GetClassName(Tmp) = 0 then
+    begin
+      WriteLn(yyout, '  ' + Tmp + ' = class (TPLYParser)');
+      WriteLn(yyout, '    public');
+    end
+    else
+      error('class name not defined.');
+  end;
+end;
+
+procedure oo_classvars;
+var
+  Idx, Ret: integer;
+  Tmp: string;
+begin
+  if object_oriented then
+  begin
+    WriteLn(yyout, '{ oo_classvars }');
+    Idx := 0;
+    repeat
+      Ret := GetClassVar(Idx, Tmp);
+      if Ret = 0 then
+        WriteLn(yyout, '    ' + Tmp);
+      Inc(Idx);
+    until Ret <> 0;
+  end;
+end;
+
+procedure oo_classfuncs;
+var
+  Idx, Ret: integer;
+  Tmp: string;
+begin
+  if object_oriented then
+  begin
+    WriteLn(yyout, '{ oo_classfuncs }');
+    Idx := 0;
+    repeat
+      Ret := GetClassFunc(Idx, Tmp);
+      if Ret = 0 then
+        WriteLn(yyout, '    ' + Tmp);
+      Inc(Idx);
+    until Ret <> 0;
+  end;
+end;
+
+procedure oo_impl;
+var
+  Tmp: string;
+  Ret: integer;
+begin
+  if object_oriented then
+  begin
+    Ret := GetClassName(Tmp);
+    Assert(Ret = 0);
+    WriteLn(yyout, '{ oo_impl }');
+    WriteLn(yyout, '  end;');
+    WriteLn(yyout);
+    WriteLn(yyout, 'implementation');
+    WriteLn(yyout);
+
+    WriteLn(yyout, 'function ' + Tmp + '.yyparse : Integer;');
+    WriteLn(yyout);
+    WriteLn(yyout, 'procedure yyaction ( yyruleno : Integer );');
+  end;
+end;
 
 procedure definitions;
   var i : Integer;

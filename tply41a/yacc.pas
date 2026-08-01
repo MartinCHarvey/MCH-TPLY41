@@ -57,7 +57,7 @@ $History: YACC.PAS $
 
    -d  "Debug:" Yacc generates parser with debugging output.
 
-   -x  "Experimental:" MCH extra experimental checking.
+   -oo "Object-Oriented:" Use OO syntax and templates.
 
    Description
 
@@ -129,7 +129,7 @@ uses
   WinCrt,
 {$ENDIF}
 {$ENDIF}
-  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars;
+  YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars, YaccClassDefs;
 
 const ID = 257;
 const C_ID = 258;
@@ -143,25 +143,20 @@ const PNONASSOC = 265;
 const PTYPE = 266;
 const PSTART = 267;
 const PPREC = 268;
-const PP = 269;
-const LCURL = 270;
-const RCURL = 271;
-const ILLEGAL = 272;
+const PCLASSNAME = 269;
+const PCLASSVAR = 270;
+const PCLASSFUNC = 271;
+const PP = 272;
+const LCURL = 273;
+const RCURL = 274;
+const ILLEGAL = 275;
+{.cod}
 
 var yylval : YYSType;
 
-{$IFNDEF INSERT_IMPLEMENTATION_CALUSE}
 function yylex : Integer; forward;
-{$ENDIF}
 
 function yyparse : Integer;
-
-{$IFDEF INSERT_IMPLEMENTATION_CALUSE}
-implementation
-
-function yyparse : Integer;
-
-{$ENDIF}
 
 var yystate, yysp, yyn : Integer;
     yys : array [1..yymaxdepth] of Integer;
@@ -207,40 +202,40 @@ begin
          yyerrok; 
        end;
   12 : begin
-         yyval := yyv[yysp-0];
+         yyerrok; 
        end;
   13 : begin
          yyerrok; 
        end;
   14 : begin
-         yyval := yyv[yysp-0];
+         yyerrok; 
        end;
   15 : begin
          yyval := yyv[yysp-0];
        end;
   16 : begin
-         error(rcurl_expected); 
+         yyerrok; 
        end;
   17 : begin
          yyval := yyv[yysp-0];
        end;
   18 : begin
-         yyerrok; 
+         yyval := yyv[yysp-0];
        end;
   19 : begin
-         yyerrok; 
+         error(rcurl_expected); 
        end;
   20 : begin
-         yyerrok; 
+         yyval := yyv[yysp-0];
        end;
   21 : begin
-         yyval := yyv[yysp-0];
+         yyerrok; 
        end;
   22 : begin
-         yyval := yyv[yysp-0];
+         yyerrok; 
        end;
   23 : begin
-         error(rbrace_expected); 
+         yyerrok; 
        end;
   24 : begin
          yyval := yyv[yysp-0];
@@ -249,253 +244,276 @@ begin
          yyval := yyv[yysp-0];
        end;
   26 : begin
-         error(rangle_expected); 
+         error(rbrace_expected); 
        end;
   27 : begin
          yyval := yyv[yysp-0];
        end;
   28 : begin
-         sort_types;
-         definitions;
-         next_section; 
+         yyval := yyv[yysp-0];
        end;
   29 : begin
+         error(rangle_expected); 
+       end;
+  30 : begin
+         yyval := yyv[yysp-0];
+       end;
+  31 : begin
+         sort_types;
+         definitions;
+         oo_def;
+         oo_classvars;
+         writeln(yyout, '{.cod}');
+         next_section;
+         oo_classfuncs;
+         oo_impl; 
+       end;
+  32 : begin
          next_section;
          generate_parser;
          next_section; 
        end;
-  30 : begin
+  33 : begin
          yyval := yyv[yysp-5];
        end;
-  31 : begin
-       end;
-  32 : begin
-         copy_rest_of_file; 
-       end;
-  33 : begin
-       end;
   34 : begin
-         yyerrok; 
        end;
   35 : begin
-         error(error_in_def); 
+         copy_rest_of_file; 
        end;
   36 : begin
-         startnt := ntsym(yyv[yysp-0]); 
        end;
   37 : begin
-         error(ident_expected); 
+         yyerrok; 
        end;
   38 : begin
-         copy_code; 
-       end;
-  39 : begin
-         yyval := yyv[yysp-2];
-       end;
-  40 : begin
-         act_prec := 0; 
-       end;
-  41 : begin
-         yyval := yyv[yysp-3];
-       end;
-  42 : begin
-         act_prec := new_prec_level(left); 
-       end;
-  43 : begin
-         yyval := yyv[yysp-3];
-       end;
-  44 : begin
-         act_prec := new_prec_level(right); 
-       end;
-  45 : begin
-         yyval := yyv[yysp-3];
-       end;
-  46 : begin
-         act_prec := new_prec_level(nonassoc); 
-       end;
-  47 : begin
-         yyval := yyv[yysp-3];
-       end;
-  48 : begin
-         yyval := yyv[yysp-2];
-       end;
-  49 : begin
-         yyval := yyv[yysp-1];
-       end;
-  50 : begin
-         act_type := 0; 
-       end;
-  51 : begin
-         act_type := yyv[yysp-1]; add_type(yyv[yysp-1]); 
-       end;
-  52 : begin
-         yyval := yyv[yysp-0];
-       end;
-  53 : begin
-         yyerrok; 
-       end;
-  54 : begin
-         yyerrok; 
-       end;
-  55 : begin
-         error(ident_expected); 
-       end;
-  56 : begin
          error(error_in_def); 
        end;
-  57 : begin
+  39 : begin
+         startnt := ntsym(yyv[yysp-0]); 
+       end;
+  40 : begin
          error(ident_expected); 
        end;
+  41 : begin
+         copy_code; 
+       end;
+  42 : begin
+         yyval := yyv[yysp-2];
+       end;
+  43 : begin
+         act_prec := 0; 
+       end;
+  44 : begin
+         yyval := yyv[yysp-3];
+       end;
+  45 : begin
+         act_prec := new_prec_level(left); 
+       end;
+  46 : begin
+         yyval := yyv[yysp-3];
+       end;
+  47 : begin
+         act_prec := new_prec_level(right); 
+       end;
+  48 : begin
+         yyval := yyv[yysp-3];
+       end;
+  49 : begin
+         act_prec := new_prec_level(nonassoc); 
+       end;
+  50 : begin
+         yyval := yyv[yysp-3];
+       end;
+  51 : begin
+         yyval := yyv[yysp-2];
+       end;
+  52 : begin
+         yyval := yyv[yysp-1];
+       end;
+  53 : begin
+         (* Rely on custom lexer to add classname *) 
+       end;
+  54 : begin
+         (* Rely on custom lexer to add classvar *) 
+       end;
+  55 : begin
+         (* Rely on custom lexer to add classfunc *) 
+       end;
+  56 : begin
+         act_type := 0; 
+       end;
+  57 : begin
+         act_type := yyv[yysp-1]; add_type(yyv[yysp-1]); 
+       end;
   58 : begin
+         yyval := yyv[yysp-0];
+       end;
+  59 : begin
+         yyerrok; 
+       end;
+  60 : begin
+         yyerrok; 
+       end;
+  61 : begin
+         error(ident_expected); 
+       end;
+  62 : begin
+         error(error_in_def); 
+       end;
+  63 : begin
+         error(ident_expected); 
+       end;
+  64 : begin
          if act_type<>0 then
          sym_type^[yyv[yysp-0]] := act_type;
          if act_prec<>0 then
          sym_prec^[yyv[yysp-0]] := act_prec; 
        end;
-  59 : begin
-         litsym(yyv[yysp-0], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-0], 0)] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-0], 0)] := act_prec; 
-       end;
-  60 : begin
-         litsym(yyv[yysp-0], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-0], 0)] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-0], 0)] := act_prec; 
-       end;
-  61 : begin
-         litsym(yyv[yysp-1], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-1], yyv[yysp-0])] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-1], 0)]  := act_prec; 
-       end;
-  62 : begin
-         litsym(yyv[yysp-1], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-1], yyv[yysp-0])] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-1], 0)]  := act_prec; 
-       end;
-  63 : begin
-         yyval := yyv[yysp-0];
-       end;
-  64 : begin
-         yyerrok; 
-       end;
   65 : begin
-         yyerrok; 
+         litsym(yyv[yysp-0], 0);
+         if act_type<>0 then
+         sym_type^[litsym(yyv[yysp-0], 0)] := act_type;
+         if act_prec<>0 then
+         sym_prec^[litsym(yyv[yysp-0], 0)] := act_prec; 
        end;
   66 : begin
-         error(ident_expected); 
+         litsym(yyv[yysp-0], 0);
+         if act_type<>0 then
+         sym_type^[litsym(yyv[yysp-0], 0)] := act_type;
+         if act_prec<>0 then
+         sym_prec^[litsym(yyv[yysp-0], 0)] := act_prec; 
        end;
   67 : begin
-         error(error_in_def); 
+         litsym(yyv[yysp-1], 0);
+         if act_type<>0 then
+         sym_type^[litsym(yyv[yysp-1], yyv[yysp-0])] := act_type;
+         if act_prec<>0 then
+         sym_prec^[litsym(yyv[yysp-1], 0)]  := act_prec; 
        end;
   68 : begin
-         error(ident_expected); 
+         litsym(yyv[yysp-1], 0);
+         if act_type<>0 then
+         sym_type^[litsym(yyv[yysp-1], yyv[yysp-0])] := act_type;
+         if act_prec<>0 then
+         sym_prec^[litsym(yyv[yysp-1], 0)]  := act_prec; 
        end;
   69 : begin
+         yyval := yyv[yysp-0];
+       end;
+  70 : begin
+         yyerrok; 
+       end;
+  71 : begin
+         yyerrok; 
+       end;
+  72 : begin
+         error(ident_expected); 
+       end;
+  73 : begin
+         error(error_in_def); 
+       end;
+  74 : begin
+         error(ident_expected); 
+       end;
+  75 : begin
          if act_type<>0 then
          sym_type^[ntsym(yyv[yysp-0])] := act_type; 
        end;
-  70 : begin
-         next_section; 
-       end;
-  71 : begin
-         yyval := yyv[yysp-1];
-       end;
-  72 : begin
-         copy_code; 
-       end;
-  73 : begin
-         next_section; 
-       end;
-  74 : begin
-         yyval := yyv[yysp-4];
-       end;
-  75 : begin
-         yyerrok; 
-       end;
   76 : begin
-         error(error_in_rule); 
+         next_section; 
        end;
   77 : begin
-         error(error_in_rule); 
-       end;
-  78 : begin
-         start_rule(ntsym(yyv[yysp-0])); 
-       end;
-  79 : begin
-         start_body; 
-       end;
-  80 : begin
-         end_body; 
-       end;
-  81 : begin
-         yyval := yyv[yysp-0];
-       end;
-  82 : begin
-         start_body; 
-       end;
-  83 : begin
-         end_body; 
-       end;
-  84 : begin
-       end;
-  85 : begin
-         add_symbol(yyv[yysp-0]); yyerrok; 
-       end;
-  86 : begin
-         add_symbol(sym(yyv[yysp-0])); yyerrok; 
-       end;
-  87 : begin
-         add_symbol(sym(yyv[yysp-0])); yyerrok; 
-       end;
-  88 : begin
-         add_action; yyerrok; 
-       end;
-  89 : begin
-         error(error_in_rule); 
-       end;
-  90 : begin
-         copy_action; 
-       end;
-  91 : begin
-         yyval := yyv[yysp-2];
-       end;
-  92 : begin
-         copy_single_action; 
-       end;
-  93 : begin
-       end;
-  94 : begin
-         add_rule_prec(yyv[yysp-0]); 
-       end;
-  95 : begin
-         yyval := yyv[yysp-3];
-       end;
-  96 : begin
-         add_rule_prec(litsym(yyv[yysp-0], 0)); 
-       end;
-  97 : begin
-         yyval := yyv[yysp-3];
-       end;
-  98 : begin
-         add_rule_prec(litsym(yyv[yysp-0], 0)); 
-       end;
-  99 : begin
-         yyval := yyv[yysp-3];
-       end;
- 100 : begin
          yyval := yyv[yysp-1];
        end;
+  78 : begin
+         copy_code; 
+       end;
+  79 : begin
+         next_section; 
+       end;
+  80 : begin
+         yyval := yyv[yysp-4];
+       end;
+  81 : begin
+         yyerrok; 
+       end;
+  82 : begin
+         error(error_in_rule); 
+       end;
+  83 : begin
+         error(error_in_rule); 
+       end;
+  84 : begin
+         start_rule(ntsym(yyv[yysp-0])); 
+       end;
+  85 : begin
+         start_body; 
+       end;
+  86 : begin
+         end_body; 
+       end;
+  87 : begin
+         yyval := yyv[yysp-0];
+       end;
+  88 : begin
+         start_body; 
+       end;
+  89 : begin
+         end_body; 
+       end;
+  90 : begin
+       end;
+  91 : begin
+         add_symbol(yyv[yysp-0]); yyerrok; 
+       end;
+  92 : begin
+         add_symbol(sym(yyv[yysp-0])); yyerrok; 
+       end;
+  93 : begin
+         add_symbol(sym(yyv[yysp-0])); yyerrok; 
+       end;
+  94 : begin
+         add_action; yyerrok; 
+       end;
+  95 : begin
+         error(error_in_rule); 
+       end;
+  96 : begin
+         copy_action; 
+       end;
+  97 : begin
+         yyval := yyv[yysp-2];
+       end;
+  98 : begin
+         copy_single_action; 
+       end;
+  99 : begin
+       end;
+ 100 : begin
+         add_rule_prec(yyv[yysp-0]); 
+       end;
  101 : begin
+         yyval := yyv[yysp-3];
        end;
  102 : begin
+         add_rule_prec(litsym(yyv[yysp-0], 0)); 
+       end;
+ 103 : begin
+         yyval := yyv[yysp-3];
+       end;
+ 104 : begin
+         add_rule_prec(litsym(yyv[yysp-0], 0)); 
+       end;
+ 105 : begin
+         yyval := yyv[yysp-3];
+       end;
+ 106 : begin
+         yyval := yyv[yysp-1];
+       end;
+ 107 : begin
+       end;
+ 108 : begin
          add_action; 
        end;
   end;
@@ -512,35 +530,203 @@ type YYARec = record
 
 const
 
-yynacts   = 251;
-yyngotos  = 146;
-yynstates = 128;
-yynrules  = 102;
+yynacts   = 281;
+yyngotos  = 149;
+yynstates = 134;
+yynrules  = 108;
 
 yya : array [1..yynacts] of YYARec = (
 { 0: }
 { 1: }
-  ( sym: 256; act: 12 ),
-  ( sym: 262; act: 13 ),
-  ( sym: 263; act: 14 ),
-  ( sym: 264; act: 15 ),
-  ( sym: 265; act: 16 ),
-  ( sym: 266; act: 17 ),
-  ( sym: 267; act: 18 ),
-  ( sym: 269; act: 19 ),
-  ( sym: 270; act: 20 ),
+  ( sym: 256; act: 15 ),
+  ( sym: 262; act: 16 ),
+  ( sym: 263; act: 17 ),
+  ( sym: 264; act: 18 ),
+  ( sym: 265; act: 19 ),
+  ( sym: 266; act: 20 ),
+  ( sym: 267; act: 21 ),
+  ( sym: 269; act: 22 ),
+  ( sym: 270; act: 23 ),
+  ( sym: 271; act: 24 ),
+  ( sym: 272; act: 25 ),
+  ( sym: 273; act: 26 ),
 { 2: }
   ( sym: 0; act: 0 ),
 { 3: }
 { 4: }
 { 5: }
 { 6: }
-  ( sym: 256; act: 24 ),
-  ( sym: 257; act: 25 ),
 { 7: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
+{ 8: }
+{ 9: }
+  ( sym: 256; act: 30 ),
+  ( sym: 257; act: 31 ),
+{ 10: }
+  ( sym: 60; act: 34 ),
+  ( sym: 256; act: -56 ),
+  ( sym: 257; act: -56 ),
+  ( sym: 262; act: -56 ),
+  ( sym: 263; act: -56 ),
+  ( sym: 264; act: -56 ),
+  ( sym: 265; act: -56 ),
+  ( sym: 266; act: -56 ),
+  ( sym: 267; act: -56 ),
+  ( sym: 269; act: -56 ),
+  ( sym: 270; act: -56 ),
+  ( sym: 271; act: -56 ),
+  ( sym: 272; act: -56 ),
+  ( sym: 273; act: -56 ),
+{ 11: }
+{ 12: }
+{ 13: }
+{ 14: }
+{ 15: }
+{ 16: }
+{ 17: }
+{ 18: }
+{ 19: }
+{ 20: }
+{ 21: }
+{ 22: }
+{ 23: }
+{ 24: }
+{ 25: }
+{ 26: }
+{ 27: }
+  ( sym: 256; act: 40 ),
+  ( sym: 274; act: 41 ),
+{ 28: }
+  ( sym: 256; act: 45 ),
+  ( sym: 273; act: 26 ),
+  ( sym: 258; act: -76 ),
+{ 29: }
+{ 30: }
+{ 31: }
+{ 32: }
+  ( sym: 256; act: 49 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 262; act: -52 ),
+  ( sym: 263; act: -52 ),
+  ( sym: 264; act: -52 ),
+  ( sym: 265; act: -52 ),
+  ( sym: 266; act: -52 ),
+  ( sym: 267; act: -52 ),
+  ( sym: 269; act: -52 ),
+  ( sym: 270; act: -52 ),
+  ( sym: 271; act: -52 ),
+  ( sym: 272; act: -52 ),
+  ( sym: 273; act: -52 ),
+{ 33: }
+  ( sym: 257; act: 31 ),
+{ 34: }
+{ 35: }
+  ( sym: 60; act: 34 ),
+  ( sym: 256; act: -56 ),
+  ( sym: 257; act: -56 ),
+  ( sym: 259; act: -56 ),
+  ( sym: 260; act: -56 ),
+{ 36: }
+  ( sym: 60; act: 34 ),
+  ( sym: 256; act: -56 ),
+  ( sym: 257; act: -56 ),
+  ( sym: 259; act: -56 ),
+  ( sym: 260; act: -56 ),
+{ 37: }
+  ( sym: 60; act: 34 ),
+  ( sym: 256; act: -56 ),
+  ( sym: 257; act: -56 ),
+  ( sym: 259; act: -56 ),
+  ( sym: 260; act: -56 ),
+{ 38: }
+  ( sym: 60; act: 34 ),
+  ( sym: 256; act: -56 ),
+  ( sym: 257; act: -56 ),
+  ( sym: 259; act: -56 ),
+  ( sym: 260; act: -56 ),
+{ 39: }
+{ 40: }
+{ 41: }
+{ 42: }
+  ( sym: 258; act: 57 ),
+{ 43: }
+  ( sym: 124; act: 62 ),
+  ( sym: 256; act: 63 ),
+  ( sym: 258; act: 57 ),
+  ( sym: 0; act: -32 ),
+  ( sym: 272; act: -32 ),
+{ 44: }
+{ 45: }
+{ 46: }
+{ 47: }
+  ( sym: 44; act: 67 ),
+  ( sym: 256; act: 68 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 262; act: -51 ),
+  ( sym: 263; act: -51 ),
+  ( sym: 264; act: -51 ),
+  ( sym: 265; act: -51 ),
+  ( sym: 266; act: -51 ),
+  ( sym: 267; act: -51 ),
+  ( sym: 269; act: -51 ),
+  ( sym: 270; act: -51 ),
+  ( sym: 271; act: -51 ),
+  ( sym: 272; act: -51 ),
+  ( sym: 273; act: -51 ),
+{ 48: }
+{ 49: }
+{ 50: }
+  ( sym: 62; act: 70 ),
+  ( sym: 256; act: 71 ),
+{ 51: }
+  ( sym: 256; act: 77 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+{ 52: }
+  ( sym: 256; act: 77 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+{ 53: }
+  ( sym: 256; act: 77 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+{ 54: }
+  ( sym: 256; act: 77 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+{ 55: }
+{ 56: }
+{ 57: }
+{ 58: }
+{ 59: }
+{ 60: }
+  ( sym: 272; act: 25 ),
+  ( sym: 0; act: -34 ),
+{ 61: }
+{ 62: }
+{ 63: }
+{ 64: }
+  ( sym: 256; act: 40 ),
+  ( sym: 274; act: 41 ),
+{ 65: }
+{ 66: }
+  ( sym: 256; act: 89 ),
+  ( sym: 257; act: 31 ),
+{ 67: }
+{ 68: }
+{ 69: }
+{ 70: }
+{ 71: }
+{ 72: }
+{ 73: }
+  ( sym: 44; act: 67 ),
+  ( sym: 256; act: 92 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
   ( sym: 262; act: -50 ),
   ( sym: 263; act: -50 ),
   ( sym: 264; act: -50 ),
@@ -549,85 +735,55 @@ yya : array [1..yynacts] of YYARec = (
   ( sym: 267; act: -50 ),
   ( sym: 269; act: -50 ),
   ( sym: 270; act: -50 ),
-{ 8: }
-{ 9: }
-{ 10: }
-{ 11: }
-{ 12: }
-{ 13: }
-{ 14: }
-{ 15: }
-{ 16: }
-{ 17: }
-{ 18: }
-{ 19: }
-{ 20: }
-{ 21: }
-  ( sym: 256; act: 34 ),
-  ( sym: 271; act: 35 ),
-{ 22: }
-  ( sym: 256; act: 39 ),
-  ( sym: 270; act: 20 ),
-  ( sym: 258; act: -70 ),
-{ 23: }
-{ 24: }
-{ 25: }
-{ 26: }
-  ( sym: 256; act: 43 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 262; act: -49 ),
-  ( sym: 263; act: -49 ),
-  ( sym: 264; act: -49 ),
-  ( sym: 265; act: -49 ),
-  ( sym: 266; act: -49 ),
-  ( sym: 267; act: -49 ),
-  ( sym: 269; act: -49 ),
-  ( sym: 270; act: -49 ),
-{ 27: }
-  ( sym: 257; act: 25 ),
-{ 28: }
-{ 29: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
-{ 30: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
-{ 31: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
-{ 32: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
-{ 33: }
-{ 34: }
-{ 35: }
-{ 36: }
-  ( sym: 258; act: 51 ),
-{ 37: }
-  ( sym: 124; act: 56 ),
-  ( sym: 256; act: 57 ),
-  ( sym: 258; act: 51 ),
-  ( sym: 0; act: -29 ),
-  ( sym: 269; act: -29 ),
-{ 38: }
-{ 39: }
-{ 40: }
-{ 41: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 62 ),
-  ( sym: 257; act: 25 ),
+  ( sym: 271; act: -50 ),
+  ( sym: 272; act: -50 ),
+  ( sym: 273; act: -50 ),
+{ 74: }
+  ( sym: 261; act: 94 ),
+  ( sym: 44; act: -65 ),
+  ( sym: 256; act: -65 ),
+  ( sym: 257; act: -65 ),
+  ( sym: 259; act: -65 ),
+  ( sym: 260; act: -65 ),
+  ( sym: 262; act: -65 ),
+  ( sym: 263; act: -65 ),
+  ( sym: 264; act: -65 ),
+  ( sym: 265; act: -65 ),
+  ( sym: 266; act: -65 ),
+  ( sym: 267; act: -65 ),
+  ( sym: 269; act: -65 ),
+  ( sym: 270; act: -65 ),
+  ( sym: 271; act: -65 ),
+  ( sym: 272; act: -65 ),
+  ( sym: 273; act: -65 ),
+{ 75: }
+{ 76: }
+  ( sym: 261; act: 94 ),
+  ( sym: 44; act: -66 ),
+  ( sym: 256; act: -66 ),
+  ( sym: 257; act: -66 ),
+  ( sym: 259; act: -66 ),
+  ( sym: 260; act: -66 ),
+  ( sym: 262; act: -66 ),
+  ( sym: 263; act: -66 ),
+  ( sym: 264; act: -66 ),
+  ( sym: 265; act: -66 ),
+  ( sym: 266; act: -66 ),
+  ( sym: 267; act: -66 ),
+  ( sym: 269; act: -66 ),
+  ( sym: 270; act: -66 ),
+  ( sym: 271; act: -66 ),
+  ( sym: 272; act: -66 ),
+  ( sym: 273; act: -66 ),
+{ 77: }
+{ 78: }
+{ 79: }
+{ 80: }
+  ( sym: 44; act: 67 ),
+  ( sym: 256; act: 92 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
   ( sym: 262; act: -48 ),
   ( sym: 263; act: -48 ),
   ( sym: 264; act: -48 ),
@@ -636,305 +792,206 @@ yya : array [1..yynacts] of YYARec = (
   ( sym: 267; act: -48 ),
   ( sym: 269; act: -48 ),
   ( sym: 270; act: -48 ),
-{ 42: }
-{ 43: }
-{ 44: }
-  ( sym: 62; act: 64 ),
-  ( sym: 256; act: 65 ),
-{ 45: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-{ 46: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-{ 47: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-{ 48: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-{ 49: }
-{ 50: }
-{ 51: }
-{ 52: }
-{ 53: }
-{ 54: }
-  ( sym: 269; act: 19 ),
-  ( sym: 0; act: -31 ),
-{ 55: }
-{ 56: }
-{ 57: }
-{ 58: }
-  ( sym: 256; act: 34 ),
-  ( sym: 271; act: 35 ),
-{ 59: }
-{ 60: }
-  ( sym: 256; act: 83 ),
-  ( sym: 257; act: 25 ),
-{ 61: }
-{ 62: }
-{ 63: }
-{ 64: }
-{ 65: }
-{ 66: }
-{ 67: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -47 ),
-  ( sym: 263; act: -47 ),
-  ( sym: 264; act: -47 ),
-  ( sym: 265; act: -47 ),
-  ( sym: 266; act: -47 ),
-  ( sym: 267; act: -47 ),
-  ( sym: 269; act: -47 ),
-  ( sym: 270; act: -47 ),
-{ 68: }
-  ( sym: 261; act: 88 ),
-  ( sym: 44; act: -59 ),
-  ( sym: 256; act: -59 ),
-  ( sym: 257; act: -59 ),
-  ( sym: 259; act: -59 ),
-  ( sym: 260; act: -59 ),
-  ( sym: 262; act: -59 ),
-  ( sym: 263; act: -59 ),
-  ( sym: 264; act: -59 ),
-  ( sym: 265; act: -59 ),
-  ( sym: 266; act: -59 ),
-  ( sym: 267; act: -59 ),
-  ( sym: 269; act: -59 ),
-  ( sym: 270; act: -59 ),
-{ 69: }
-{ 70: }
-  ( sym: 261; act: 88 ),
-  ( sym: 44; act: -60 ),
-  ( sym: 256; act: -60 ),
-  ( sym: 257; act: -60 ),
-  ( sym: 259; act: -60 ),
-  ( sym: 260; act: -60 ),
-  ( sym: 262; act: -60 ),
-  ( sym: 263; act: -60 ),
-  ( sym: 264; act: -60 ),
-  ( sym: 265; act: -60 ),
-  ( sym: 266; act: -60 ),
-  ( sym: 267; act: -60 ),
-  ( sym: 269; act: -60 ),
-  ( sym: 270; act: -60 ),
-{ 71: }
-{ 72: }
-{ 73: }
-{ 74: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -45 ),
-  ( sym: 263; act: -45 ),
-  ( sym: 264; act: -45 ),
-  ( sym: 265; act: -45 ),
-  ( sym: 266; act: -45 ),
-  ( sym: 267; act: -45 ),
-  ( sym: 269; act: -45 ),
-  ( sym: 270; act: -45 ),
-{ 75: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -43 ),
-  ( sym: 263; act: -43 ),
-  ( sym: 264; act: -43 ),
-  ( sym: 265; act: -43 ),
-  ( sym: 266; act: -43 ),
-  ( sym: 267; act: -43 ),
-  ( sym: 269; act: -43 ),
-  ( sym: 270; act: -43 ),
-{ 76: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -41 ),
-  ( sym: 263; act: -41 ),
-  ( sym: 264; act: -41 ),
-  ( sym: 265; act: -41 ),
-  ( sym: 266; act: -41 ),
-  ( sym: 267; act: -41 ),
-  ( sym: 269; act: -41 ),
-  ( sym: 270; act: -41 ),
-{ 77: }
-  ( sym: 58; act: 91 ),
-{ 78: }
-{ 79: }
-{ 80: }
+  ( sym: 271; act: -48 ),
+  ( sym: 272; act: -48 ),
+  ( sym: 273; act: -48 ),
 { 81: }
+  ( sym: 44; act: 67 ),
+  ( sym: 256; act: 92 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+  ( sym: 262; act: -46 ),
+  ( sym: 263; act: -46 ),
+  ( sym: 264; act: -46 ),
+  ( sym: 265; act: -46 ),
+  ( sym: 266; act: -46 ),
+  ( sym: 267; act: -46 ),
+  ( sym: 269; act: -46 ),
+  ( sym: 270; act: -46 ),
+  ( sym: 271; act: -46 ),
+  ( sym: 272; act: -46 ),
+  ( sym: 273; act: -46 ),
 { 82: }
+  ( sym: 44; act: 67 ),
+  ( sym: 256; act: 92 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+  ( sym: 262; act: -44 ),
+  ( sym: 263; act: -44 ),
+  ( sym: 264; act: -44 ),
+  ( sym: 265; act: -44 ),
+  ( sym: 266; act: -44 ),
+  ( sym: 267; act: -44 ),
+  ( sym: 269; act: -44 ),
+  ( sym: 270; act: -44 ),
+  ( sym: 271; act: -44 ),
+  ( sym: 272; act: -44 ),
+  ( sym: 273; act: -44 ),
 { 83: }
+  ( sym: 58; act: 97 ),
 { 84: }
 { 85: }
-  ( sym: 256; act: 95 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
 { 86: }
 { 87: }
 { 88: }
 { 89: }
 { 90: }
 { 91: }
+  ( sym: 256; act: 101 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
 { 92: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 256; act: 107 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 268; act: 108 ),
-  ( sym: 0; act: -93 ),
-  ( sym: 59; act: -93 ),
-  ( sym: 124; act: -93 ),
-  ( sym: 258; act: -93 ),
-  ( sym: 269; act: -93 ),
 { 93: }
-  ( sym: 258; act: 51 ),
 { 94: }
 { 95: }
 { 96: }
 { 97: }
 { 98: }
-  ( sym: 59; act: 112 ),
-  ( sym: 0; act: -83 ),
-  ( sym: 124; act: -83 ),
-  ( sym: 256; act: -83 ),
-  ( sym: 258; act: -83 ),
-  ( sym: 269; act: -83 ),
+  ( sym: 61; act: 111 ),
+  ( sym: 123; act: 112 ),
+  ( sym: 256; act: 113 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+  ( sym: 268; act: 114 ),
+  ( sym: 0; act: -99 ),
+  ( sym: 59; act: -99 ),
+  ( sym: 124; act: -99 ),
+  ( sym: 258; act: -99 ),
+  ( sym: 272; act: -99 ),
 { 99: }
+  ( sym: 258; act: 57 ),
 { 100: }
 { 101: }
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
 { 102: }
 { 103: }
 { 104: }
+  ( sym: 59; act: 118 ),
+  ( sym: 0; act: -89 ),
+  ( sym: 124; act: -89 ),
+  ( sym: 256; act: -89 ),
+  ( sym: 258; act: -89 ),
+  ( sym: 272; act: -89 ),
 { 105: }
 { 106: }
 { 107: }
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
 { 108: }
 { 109: }
 { 110: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 256; act: 107 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 268; act: 108 ),
-  ( sym: 0; act: -93 ),
-  ( sym: 59; act: -93 ),
-  ( sym: 124; act: -93 ),
-  ( sym: 258; act: -93 ),
-  ( sym: 269; act: -93 ),
 { 111: }
 { 112: }
 { 113: }
-  ( sym: 125; act: 119 ),
-  ( sym: 256; act: 120 ),
 { 114: }
 { 115: }
 { 116: }
+  ( sym: 61; act: 111 ),
+  ( sym: 123; act: 112 ),
+  ( sym: 256; act: 113 ),
+  ( sym: 257; act: 31 ),
+  ( sym: 259; act: 78 ),
+  ( sym: 260; act: 79 ),
+  ( sym: 268; act: 114 ),
+  ( sym: 0; act: -99 ),
+  ( sym: 59; act: -99 ),
+  ( sym: 124; act: -99 ),
+  ( sym: 258; act: -99 ),
+  ( sym: 272; act: -99 ),
 { 117: }
-  ( sym: 59; act: 112 ),
-  ( sym: 0; act: -80 ),
-  ( sym: 124; act: -80 ),
-  ( sym: 256; act: -80 ),
-  ( sym: 258; act: -80 ),
-  ( sym: 269; act: -80 ),
 { 118: }
 { 119: }
+  ( sym: 125; act: 125 ),
+  ( sym: 256; act: 126 ),
 { 120: }
 { 121: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 0; act: -101 ),
-  ( sym: 59; act: -101 ),
-  ( sym: 124; act: -101 ),
-  ( sym: 256; act: -101 ),
-  ( sym: 258; act: -101 ),
-  ( sym: 269; act: -101 ),
 { 122: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 0; act: -101 ),
-  ( sym: 59; act: -101 ),
-  ( sym: 124; act: -101 ),
-  ( sym: 256; act: -101 ),
-  ( sym: 258; act: -101 ),
-  ( sym: 269; act: -101 ),
 { 123: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 0; act: -101 ),
-  ( sym: 59; act: -101 ),
-  ( sym: 124; act: -101 ),
-  ( sym: 256; act: -101 ),
-  ( sym: 258; act: -101 ),
-  ( sym: 269; act: -101 )
+  ( sym: 59; act: 118 ),
+  ( sym: 0; act: -86 ),
+  ( sym: 124; act: -86 ),
+  ( sym: 256; act: -86 ),
+  ( sym: 258; act: -86 ),
+  ( sym: 272; act: -86 ),
 { 124: }
 { 125: }
 { 126: }
 { 127: }
+  ( sym: 61; act: 111 ),
+  ( sym: 123; act: 112 ),
+  ( sym: 0; act: -107 ),
+  ( sym: 59; act: -107 ),
+  ( sym: 124; act: -107 ),
+  ( sym: 256; act: -107 ),
+  ( sym: 258; act: -107 ),
+  ( sym: 272; act: -107 ),
+{ 128: }
+  ( sym: 61; act: 111 ),
+  ( sym: 123; act: 112 ),
+  ( sym: 0; act: -107 ),
+  ( sym: 59; act: -107 ),
+  ( sym: 124; act: -107 ),
+  ( sym: 256; act: -107 ),
+  ( sym: 258; act: -107 ),
+  ( sym: 272; act: -107 ),
+{ 129: }
+  ( sym: 61; act: 111 ),
+  ( sym: 123; act: 112 ),
+  ( sym: 0; act: -107 ),
+  ( sym: 59; act: -107 ),
+  ( sym: 124; act: -107 ),
+  ( sym: 256; act: -107 ),
+  ( sym: 258; act: -107 ),
+  ( sym: 272; act: -107 )
+{ 130: }
+{ 131: }
+{ 132: }
+{ 133: }
 );
 
 yyg : array [1..yyngotos] of YYARec = (
 { 0: }
-  ( sym: -27; act: 1 ),
+  ( sym: -30; act: 1 ),
   ( sym: -2; act: 2 ),
 { 1: }
-  ( sym: -32; act: 3 ),
-  ( sym: -16; act: 4 ),
-  ( sym: -15; act: 5 ),
-  ( sym: -13; act: 6 ),
-  ( sym: -12; act: 7 ),
-  ( sym: -11; act: 8 ),
-  ( sym: -10; act: 9 ),
-  ( sym: -9; act: 10 ),
-  ( sym: -8; act: 11 ),
+  ( sym: -35; act: 3 ),
+  ( sym: -19; act: 4 ),
+  ( sym: -18; act: 5 ),
+  ( sym: -16; act: 6 ),
+  ( sym: -15; act: 7 ),
+  ( sym: -14; act: 8 ),
+  ( sym: -13; act: 9 ),
+  ( sym: -12; act: 10 ),
+  ( sym: -11; act: 11 ),
+  ( sym: -10; act: 12 ),
+  ( sym: -9; act: 13 ),
+  ( sym: -8; act: 14 ),
 { 2: }
 { 3: }
 { 4: }
-  ( sym: -33; act: 21 ),
+  ( sym: -36; act: 27 ),
 { 5: }
-  ( sym: -29; act: 22 ),
+  ( sym: -32; act: 28 ),
 { 6: }
-  ( sym: -3; act: 23 ),
 { 7: }
-  ( sym: -34; act: 26 ),
-  ( sym: -24; act: 27 ),
 { 8: }
-  ( sym: -39; act: 29 ),
 { 9: }
-  ( sym: -38; act: 30 ),
+  ( sym: -3; act: 29 ),
 { 10: }
-  ( sym: -37; act: 31 ),
+  ( sym: -37; act: 32 ),
+  ( sym: -27; act: 33 ),
 { 11: }
-  ( sym: -35; act: 32 ),
+  ( sym: -42; act: 35 ),
 { 12: }
+  ( sym: -41; act: 36 ),
 { 13: }
+  ( sym: -40; act: 37 ),
 { 14: }
+  ( sym: -38; act: 38 ),
 { 15: }
 { 16: }
 { 17: }
@@ -942,387 +999,673 @@ yyg : array [1..yyngotos] of YYARec = (
 { 19: }
 { 20: }
 { 21: }
-  ( sym: -17; act: 33 ),
 { 22: }
-  ( sym: -44; act: 36 ),
-  ( sym: -28; act: 37 ),
-  ( sym: -16; act: 38 ),
 { 23: }
 { 24: }
 { 25: }
 { 26: }
-  ( sym: -42; act: 40 ),
-  ( sym: -40; act: 41 ),
-  ( sym: -3; act: 42 ),
 { 27: }
-  ( sym: -3; act: 44 ),
+  ( sym: -20; act: 39 ),
 { 28: }
+  ( sym: -47; act: 42 ),
+  ( sym: -31; act: 43 ),
+  ( sym: -19; act: 44 ),
 { 29: }
-  ( sym: -34; act: 45 ),
-  ( sym: -24; act: 27 ),
 { 30: }
-  ( sym: -34; act: 46 ),
-  ( sym: -24; act: 27 ),
 { 31: }
-  ( sym: -34; act: 47 ),
-  ( sym: -24; act: 27 ),
 { 32: }
-  ( sym: -34; act: 48 ),
-  ( sym: -24; act: 27 ),
+  ( sym: -45; act: 46 ),
+  ( sym: -43; act: 47 ),
+  ( sym: -3; act: 48 ),
 { 33: }
+  ( sym: -3; act: 50 ),
 { 34: }
 { 35: }
+  ( sym: -37; act: 51 ),
+  ( sym: -27; act: 33 ),
 { 36: }
-  ( sym: -43; act: 49 ),
-  ( sym: -4; act: 50 ),
+  ( sym: -37; act: 52 ),
+  ( sym: -27; act: 33 ),
 { 37: }
-  ( sym: -47; act: 52 ),
-  ( sym: -43; act: 53 ),
-  ( sym: -31; act: 54 ),
-  ( sym: -21; act: 55 ),
-  ( sym: -4; act: 50 ),
+  ( sym: -37; act: 53 ),
+  ( sym: -27; act: 33 ),
 { 38: }
-  ( sym: -45; act: 58 ),
+  ( sym: -37; act: 54 ),
+  ( sym: -27; act: 33 ),
 { 39: }
 { 40: }
 { 41: }
-  ( sym: -42; act: 59 ),
-  ( sym: -18; act: 60 ),
-  ( sym: -3; act: 42 ),
 { 42: }
+  ( sym: -46; act: 55 ),
+  ( sym: -4; act: 56 ),
 { 43: }
+  ( sym: -50; act: 58 ),
+  ( sym: -46; act: 59 ),
+  ( sym: -34; act: 60 ),
+  ( sym: -24; act: 61 ),
+  ( sym: -4; act: 56 ),
 { 44: }
-  ( sym: -25; act: 63 ),
+  ( sym: -48; act: 64 ),
 { 45: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 67 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
 { 46: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 74 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
 { 47: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 75 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( sym: -45; act: 65 ),
+  ( sym: -21; act: 66 ),
+  ( sym: -3; act: 48 ),
 { 48: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 76 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
 { 49: }
 { 50: }
-  ( sym: -48; act: 77 ),
+  ( sym: -28; act: 69 ),
 { 51: }
+  ( sym: -44; act: 72 ),
+  ( sym: -39; act: 73 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 52: }
+  ( sym: -44; act: 72 ),
+  ( sym: -39; act: 80 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 53: }
+  ( sym: -44; act: 72 ),
+  ( sym: -39; act: 81 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 54: }
-  ( sym: -30; act: 78 ),
-  ( sym: -15; act: 79 ),
+  ( sym: -44; act: 72 ),
+  ( sym: -39; act: 82 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 55: }
-  ( sym: -52; act: 80 ),
 { 56: }
+  ( sym: -51; act: 83 ),
 { 57: }
 { 58: }
-  ( sym: -17; act: 81 ),
 { 59: }
 { 60: }
-  ( sym: -42; act: 82 ),
-  ( sym: -3; act: 42 ),
+  ( sym: -33; act: 84 ),
+  ( sym: -18; act: 85 ),
 { 61: }
+  ( sym: -55; act: 86 ),
 { 62: }
 { 63: }
 { 64: }
+  ( sym: -20; act: 87 ),
 { 65: }
 { 66: }
+  ( sym: -45; act: 88 ),
+  ( sym: -3; act: 48 ),
 { 67: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
 { 68: }
-  ( sym: -7; act: 87 ),
 { 69: }
 { 70: }
-  ( sym: -7; act: 89 ),
 { 71: }
 { 72: }
 { 73: }
+  ( sym: -44; act: 90 ),
+  ( sym: -21; act: 91 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 74: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( sym: -7; act: 93 ),
 { 75: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
 { 76: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( sym: -7; act: 95 ),
 { 77: }
-  ( sym: -19; act: 90 ),
 { 78: }
 { 79: }
 { 80: }
-  ( sym: -49; act: 92 ),
+  ( sym: -44; act: 90 ),
+  ( sym: -21; act: 91 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 81: }
-  ( sym: -46; act: 93 ),
+  ( sym: -44; act: 90 ),
+  ( sym: -21; act: 91 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 82: }
+  ( sym: -44; act: 90 ),
+  ( sym: -21; act: 91 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 83: }
+  ( sym: -22; act: 96 ),
 { 84: }
 { 85: }
-  ( sym: -41; act: 94 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
 { 86: }
+  ( sym: -52; act: 98 ),
 { 87: }
+  ( sym: -49; act: 99 ),
 { 88: }
 { 89: }
 { 90: }
-  ( sym: -50; act: 96 ),
 { 91: }
+  ( sym: -44; act: 100 ),
+  ( sym: -6; act: 74 ),
+  ( sym: -5; act: 75 ),
+  ( sym: -3; act: 76 ),
 { 92: }
-  ( sym: -53; act: 97 ),
-  ( sym: -51; act: 98 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
-  ( sym: -14; act: 101 ),
-  ( sym: -6; act: 102 ),
-  ( sym: -5; act: 103 ),
-  ( sym: -3; act: 104 ),
 { 93: }
-  ( sym: -43; act: 109 ),
-  ( sym: -4; act: 50 ),
 { 94: }
 { 95: }
 { 96: }
-  ( sym: -49; act: 110 ),
+  ( sym: -53; act: 102 ),
 { 97: }
 { 98: }
-  ( sym: -20; act: 111 ),
+  ( sym: -56; act: 103 ),
+  ( sym: -54; act: 104 ),
+  ( sym: -29; act: 105 ),
+  ( sym: -25; act: 106 ),
+  ( sym: -17; act: 107 ),
+  ( sym: -6; act: 108 ),
+  ( sym: -5; act: 109 ),
+  ( sym: -3; act: 110 ),
 { 99: }
+  ( sym: -46; act: 115 ),
+  ( sym: -4; act: 56 ),
 { 100: }
-  ( sym: -54; act: 113 ),
 { 101: }
-  ( sym: -6; act: 114 ),
-  ( sym: -5; act: 115 ),
-  ( sym: -3; act: 116 ),
 { 102: }
+  ( sym: -52; act: 116 ),
 { 103: }
 { 104: }
+  ( sym: -23; act: 117 ),
 { 105: }
 { 106: }
+  ( sym: -57; act: 119 ),
 { 107: }
+  ( sym: -6; act: 120 ),
+  ( sym: -5; act: 121 ),
+  ( sym: -3; act: 122 ),
 { 108: }
 { 109: }
 { 110: }
-  ( sym: -53; act: 97 ),
-  ( sym: -51; act: 117 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
-  ( sym: -14; act: 101 ),
-  ( sym: -6; act: 102 ),
-  ( sym: -5; act: 103 ),
-  ( sym: -3; act: 104 ),
 { 111: }
 { 112: }
 { 113: }
-  ( sym: -23; act: 118 ),
 { 114: }
-  ( sym: -57; act: 121 ),
 { 115: }
-  ( sym: -56; act: 122 ),
 { 116: }
-  ( sym: -58; act: 123 ),
+  ( sym: -56; act: 103 ),
+  ( sym: -54; act: 123 ),
+  ( sym: -29; act: 105 ),
+  ( sym: -25; act: 106 ),
+  ( sym: -17; act: 107 ),
+  ( sym: -6; act: 108 ),
+  ( sym: -5; act: 109 ),
+  ( sym: -3; act: 110 ),
 { 117: }
-  ( sym: -20; act: 111 ),
 { 118: }
 { 119: }
+  ( sym: -26; act: 124 ),
 { 120: }
+  ( sym: -60; act: 127 ),
 { 121: }
-  ( sym: -55; act: 124 ),
-  ( sym: -53; act: 125 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
+  ( sym: -59; act: 128 ),
 { 122: }
-  ( sym: -55; act: 126 ),
-  ( sym: -53; act: 125 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
+  ( sym: -61; act: 129 ),
 { 123: }
-  ( sym: -55; act: 127 ),
-  ( sym: -53; act: 125 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 )
+  ( sym: -23; act: 117 ),
 { 124: }
 { 125: }
 { 126: }
 { 127: }
+  ( sym: -58; act: 130 ),
+  ( sym: -56; act: 131 ),
+  ( sym: -29; act: 105 ),
+  ( sym: -25; act: 106 ),
+{ 128: }
+  ( sym: -58; act: 132 ),
+  ( sym: -56; act: 131 ),
+  ( sym: -29; act: 105 ),
+  ( sym: -25; act: 106 ),
+{ 129: }
+  ( sym: -58; act: 133 ),
+  ( sym: -56; act: 131 ),
+  ( sym: -29; act: 105 ),
+  ( sym: -25; act: 106 )
+{ 130: }
+{ 131: }
+{ 132: }
+{ 133: }
 );
 
 yyd : array [0..yynstates-1] of Integer = (
-{ 0: } -33,
+{ 0: } -36,
 { 1: } 0,
 { 2: } 0,
-{ 3: } -34,
-{ 4: } -38,
-{ 5: } -28,
-{ 6: } 0,
-{ 7: } 0,
-{ 8: } -46,
-{ 9: } -44,
-{ 10: } -42,
-{ 11: } -40,
-{ 12: } -35,
-{ 13: } -6,
-{ 14: } -7,
-{ 15: } -8,
-{ 16: } -9,
-{ 17: } -10,
-{ 18: } -11,
-{ 19: } -13,
-{ 20: } -14,
-{ 21: } 0,
-{ 22: } 0,
-{ 23: } -36,
-{ 24: } -37,
-{ 25: } -1,
-{ 26: } 0,
+{ 3: } -37,
+{ 4: } -41,
+{ 5: } -31,
+{ 6: } -55,
+{ 7: } -54,
+{ 8: } -53,
+{ 9: } 0,
+{ 10: } 0,
+{ 11: } -49,
+{ 12: } -47,
+{ 13: } -45,
+{ 14: } -43,
+{ 15: } -38,
+{ 16: } -6,
+{ 17: } -7,
+{ 18: } -8,
+{ 19: } -9,
+{ 20: } -10,
+{ 21: } -11,
+{ 22: } -12,
+{ 23: } -13,
+{ 24: } -14,
+{ 25: } -16,
+{ 26: } -17,
 { 27: } 0,
-{ 28: } -24,
-{ 29: } 0,
-{ 30: } 0,
-{ 31: } 0,
+{ 28: } 0,
+{ 29: } -39,
+{ 30: } -40,
+{ 31: } -1,
 { 32: } 0,
-{ 33: } -39,
-{ 34: } -16,
-{ 35: } -15,
+{ 33: } 0,
+{ 34: } -27,
+{ 35: } 0,
 { 36: } 0,
 { 37: } 0,
-{ 38: } -72,
-{ 39: } -76,
-{ 40: } -63,
-{ 41: } 0,
-{ 42: } -69,
-{ 43: } -66,
-{ 44: } 0,
-{ 45: } 0,
-{ 46: } 0,
+{ 38: } 0,
+{ 39: } -42,
+{ 40: } -19,
+{ 41: } -18,
+{ 42: } 0,
+{ 43: } 0,
+{ 44: } -78,
+{ 45: } -82,
+{ 46: } -69,
 { 47: } 0,
-{ 48: } 0,
-{ 49: } -71,
-{ 50: } -78,
-{ 51: } -2,
-{ 52: } -75,
-{ 53: } -81,
+{ 48: } -75,
+{ 49: } -72,
+{ 50: } 0,
+{ 51: } 0,
+{ 52: } 0,
+{ 53: } 0,
 { 54: } 0,
-{ 55: } -82,
-{ 56: } -20,
-{ 57: } -77,
-{ 58: } 0,
-{ 59: } -64,
+{ 55: } -77,
+{ 56: } -84,
+{ 57: } -2,
+{ 58: } -81,
+{ 59: } -87,
 { 60: } 0,
-{ 61: } -17,
-{ 62: } -67,
-{ 63: } -51,
-{ 64: } -25,
-{ 65: } -26,
-{ 66: } -52,
-{ 67: } 0,
-{ 68: } 0,
-{ 69: } -58,
-{ 70: } 0,
-{ 71: } -55,
-{ 72: } -3,
-{ 73: } -4,
+{ 61: } -88,
+{ 62: } -23,
+{ 63: } -83,
+{ 64: } 0,
+{ 65: } -70,
+{ 66: } 0,
+{ 67: } -20,
+{ 68: } -73,
+{ 69: } -57,
+{ 70: } -28,
+{ 71: } -29,
+{ 72: } -58,
+{ 73: } 0,
 { 74: } 0,
-{ 75: } 0,
+{ 75: } -64,
 { 76: } 0,
-{ 77: } 0,
-{ 78: } -30,
-{ 79: } -32,
-{ 80: } -84,
-{ 81: } -73,
-{ 82: } -65,
-{ 83: } -68,
-{ 84: } -53,
-{ 85: } 0,
-{ 86: } -56,
-{ 87: } -61,
-{ 88: } -5,
-{ 89: } -62,
-{ 90: } -79,
-{ 91: } -18,
-{ 92: } 0,
-{ 93: } 0,
-{ 94: } -54,
-{ 95: } -57,
-{ 96: } -84,
-{ 97: } -88,
+{ 77: } -61,
+{ 78: } -3,
+{ 79: } -4,
+{ 80: } 0,
+{ 81: } 0,
+{ 82: } 0,
+{ 83: } 0,
+{ 84: } -33,
+{ 85: } -35,
+{ 86: } -90,
+{ 87: } -79,
+{ 88: } -71,
+{ 89: } -74,
+{ 90: } -59,
+{ 91: } 0,
+{ 92: } -62,
+{ 93: } -67,
+{ 94: } -5,
+{ 95: } -68,
+{ 96: } -85,
+{ 97: } -21,
 { 98: } 0,
-{ 99: } -92,
-{ 100: } -90,
-{ 101: } 0,
-{ 102: } -86,
-{ 103: } -85,
-{ 104: } -87,
-{ 105: } -27,
-{ 106: } -21,
-{ 107: } -89,
-{ 108: } -12,
-{ 109: } -74,
-{ 110: } 0,
-{ 111: } -100,
-{ 112: } -19,
-{ 113: } 0,
-{ 114: } -96,
-{ 115: } -94,
-{ 116: } -98,
-{ 117: } 0,
-{ 118: } -91,
-{ 119: } -22,
-{ 120: } -23,
-{ 121: } 0,
-{ 122: } 0,
+{ 99: } 0,
+{ 100: } -60,
+{ 101: } -63,
+{ 102: } -90,
+{ 103: } -94,
+{ 104: } 0,
+{ 105: } -98,
+{ 106: } -96,
+{ 107: } 0,
+{ 108: } -92,
+{ 109: } -91,
+{ 110: } -93,
+{ 111: } -30,
+{ 112: } -24,
+{ 113: } -95,
+{ 114: } -15,
+{ 115: } -80,
+{ 116: } 0,
+{ 117: } -106,
+{ 118: } -22,
+{ 119: } 0,
+{ 120: } -102,
+{ 121: } -100,
+{ 122: } -104,
 { 123: } 0,
 { 124: } -97,
-{ 125: } -102,
-{ 126: } -95,
-{ 127: } -99
+{ 125: } -25,
+{ 126: } -26,
+{ 127: } 0,
+{ 128: } 0,
+{ 129: } 0,
+{ 130: } -103,
+{ 131: } -108,
+{ 132: } -101,
+{ 133: } -105
 );
 
 yyal : array [0..yynstates-1] of Integer = (
 { 0: } 1,
 { 1: } 1,
-{ 2: } 10,
-{ 3: } 11,
-{ 4: } 11,
-{ 5: } 11,
-{ 6: } 11,
+{ 2: } 13,
+{ 3: } 14,
+{ 4: } 14,
+{ 5: } 14,
+{ 6: } 14,
+{ 7: } 14,
+{ 8: } 14,
+{ 9: } 14,
+{ 10: } 16,
+{ 11: } 30,
+{ 12: } 30,
+{ 13: } 30,
+{ 14: } 30,
+{ 15: } 30,
+{ 16: } 30,
+{ 17: } 30,
+{ 18: } 30,
+{ 19: } 30,
+{ 20: } 30,
+{ 21: } 30,
+{ 22: } 30,
+{ 23: } 30,
+{ 24: } 30,
+{ 25: } 30,
+{ 26: } 30,
+{ 27: } 30,
+{ 28: } 32,
+{ 29: } 35,
+{ 30: } 35,
+{ 31: } 35,
+{ 32: } 35,
+{ 33: } 48,
+{ 34: } 49,
+{ 35: } 49,
+{ 36: } 54,
+{ 37: } 59,
+{ 38: } 64,
+{ 39: } 69,
+{ 40: } 69,
+{ 41: } 69,
+{ 42: } 69,
+{ 43: } 70,
+{ 44: } 75,
+{ 45: } 75,
+{ 46: } 75,
+{ 47: } 75,
+{ 48: } 89,
+{ 49: } 89,
+{ 50: } 89,
+{ 51: } 91,
+{ 52: } 95,
+{ 53: } 99,
+{ 54: } 103,
+{ 55: } 107,
+{ 56: } 107,
+{ 57: } 107,
+{ 58: } 107,
+{ 59: } 107,
+{ 60: } 107,
+{ 61: } 109,
+{ 62: } 109,
+{ 63: } 109,
+{ 64: } 109,
+{ 65: } 111,
+{ 66: } 111,
+{ 67: } 113,
+{ 68: } 113,
+{ 69: } 113,
+{ 70: } 113,
+{ 71: } 113,
+{ 72: } 113,
+{ 73: } 113,
+{ 74: } 129,
+{ 75: } 146,
+{ 76: } 146,
+{ 77: } 163,
+{ 78: } 163,
+{ 79: } 163,
+{ 80: } 163,
+{ 81: } 179,
+{ 82: } 195,
+{ 83: } 211,
+{ 84: } 212,
+{ 85: } 212,
+{ 86: } 212,
+{ 87: } 212,
+{ 88: } 212,
+{ 89: } 212,
+{ 90: } 212,
+{ 91: } 212,
+{ 92: } 216,
+{ 93: } 216,
+{ 94: } 216,
+{ 95: } 216,
+{ 96: } 216,
+{ 97: } 216,
+{ 98: } 216,
+{ 99: } 228,
+{ 100: } 229,
+{ 101: } 229,
+{ 102: } 229,
+{ 103: } 229,
+{ 104: } 229,
+{ 105: } 235,
+{ 106: } 235,
+{ 107: } 235,
+{ 108: } 238,
+{ 109: } 238,
+{ 110: } 238,
+{ 111: } 238,
+{ 112: } 238,
+{ 113: } 238,
+{ 114: } 238,
+{ 115: } 238,
+{ 116: } 238,
+{ 117: } 250,
+{ 118: } 250,
+{ 119: } 250,
+{ 120: } 252,
+{ 121: } 252,
+{ 122: } 252,
+{ 123: } 252,
+{ 124: } 258,
+{ 125: } 258,
+{ 126: } 258,
+{ 127: } 258,
+{ 128: } 266,
+{ 129: } 274,
+{ 130: } 282,
+{ 131: } 282,
+{ 132: } 282,
+{ 133: } 282
+);
+
+yyah : array [0..yynstates-1] of Integer = (
+{ 0: } 0,
+{ 1: } 12,
+{ 2: } 13,
+{ 3: } 13,
+{ 4: } 13,
+{ 5: } 13,
+{ 6: } 13,
 { 7: } 13,
-{ 8: } 24,
-{ 9: } 24,
-{ 10: } 24,
-{ 11: } 24,
-{ 12: } 24,
-{ 13: } 24,
-{ 14: } 24,
+{ 8: } 13,
+{ 9: } 15,
+{ 10: } 29,
+{ 11: } 29,
+{ 12: } 29,
+{ 13: } 29,
+{ 14: } 29,
+{ 15: } 29,
+{ 16: } 29,
+{ 17: } 29,
+{ 18: } 29,
+{ 19: } 29,
+{ 20: } 29,
+{ 21: } 29,
+{ 22: } 29,
+{ 23: } 29,
+{ 24: } 29,
+{ 25: } 29,
+{ 26: } 29,
+{ 27: } 31,
+{ 28: } 34,
+{ 29: } 34,
+{ 30: } 34,
+{ 31: } 34,
+{ 32: } 47,
+{ 33: } 48,
+{ 34: } 48,
+{ 35: } 53,
+{ 36: } 58,
+{ 37: } 63,
+{ 38: } 68,
+{ 39: } 68,
+{ 40: } 68,
+{ 41: } 68,
+{ 42: } 69,
+{ 43: } 74,
+{ 44: } 74,
+{ 45: } 74,
+{ 46: } 74,
+{ 47: } 88,
+{ 48: } 88,
+{ 49: } 88,
+{ 50: } 90,
+{ 51: } 94,
+{ 52: } 98,
+{ 53: } 102,
+{ 54: } 106,
+{ 55: } 106,
+{ 56: } 106,
+{ 57: } 106,
+{ 58: } 106,
+{ 59: } 106,
+{ 60: } 108,
+{ 61: } 108,
+{ 62: } 108,
+{ 63: } 108,
+{ 64: } 110,
+{ 65: } 110,
+{ 66: } 112,
+{ 67: } 112,
+{ 68: } 112,
+{ 69: } 112,
+{ 70: } 112,
+{ 71: } 112,
+{ 72: } 112,
+{ 73: } 128,
+{ 74: } 145,
+{ 75: } 145,
+{ 76: } 162,
+{ 77: } 162,
+{ 78: } 162,
+{ 79: } 162,
+{ 80: } 178,
+{ 81: } 194,
+{ 82: } 210,
+{ 83: } 211,
+{ 84: } 211,
+{ 85: } 211,
+{ 86: } 211,
+{ 87: } 211,
+{ 88: } 211,
+{ 89: } 211,
+{ 90: } 211,
+{ 91: } 215,
+{ 92: } 215,
+{ 93: } 215,
+{ 94: } 215,
+{ 95: } 215,
+{ 96: } 215,
+{ 97: } 215,
+{ 98: } 227,
+{ 99: } 228,
+{ 100: } 228,
+{ 101: } 228,
+{ 102: } 228,
+{ 103: } 228,
+{ 104: } 234,
+{ 105: } 234,
+{ 106: } 234,
+{ 107: } 237,
+{ 108: } 237,
+{ 109: } 237,
+{ 110: } 237,
+{ 111: } 237,
+{ 112: } 237,
+{ 113: } 237,
+{ 114: } 237,
+{ 115: } 237,
+{ 116: } 249,
+{ 117: } 249,
+{ 118: } 249,
+{ 119: } 251,
+{ 120: } 251,
+{ 121: } 251,
+{ 122: } 251,
+{ 123: } 257,
+{ 124: } 257,
+{ 125: } 257,
+{ 126: } 257,
+{ 127: } 265,
+{ 128: } 273,
+{ 129: } 281,
+{ 130: } 281,
+{ 131: } 281,
+{ 132: } 281,
+{ 133: } 281
+);
+
+yygl : array [0..yynstates-1] of Integer = (
+{ 0: } 1,
+{ 1: } 3,
+{ 2: } 15,
+{ 3: } 15,
+{ 4: } 15,
+{ 5: } 16,
+{ 6: } 17,
+{ 7: } 17,
+{ 8: } 17,
+{ 9: } 17,
+{ 10: } 18,
+{ 11: } 20,
+{ 12: } 21,
+{ 13: } 22,
+{ 14: } 23,
 { 15: } 24,
 { 16: } 24,
 { 17: } 24,
@@ -1330,129 +1673,135 @@ yyal : array [0..yynstates-1] of Integer = (
 { 19: } 24,
 { 20: } 24,
 { 21: } 24,
-{ 22: } 26,
-{ 23: } 29,
-{ 24: } 29,
-{ 25: } 29,
-{ 26: } 29,
-{ 27: } 39,
-{ 28: } 40,
-{ 29: } 40,
-{ 30: } 45,
-{ 31: } 50,
-{ 32: } 55,
-{ 33: } 60,
-{ 34: } 60,
-{ 35: } 60,
-{ 36: } 60,
-{ 37: } 61,
-{ 38: } 66,
-{ 39: } 66,
-{ 40: } 66,
-{ 41: } 66,
-{ 42: } 77,
-{ 43: } 77,
-{ 44: } 77,
-{ 45: } 79,
-{ 46: } 83,
-{ 47: } 87,
-{ 48: } 91,
-{ 49: } 95,
-{ 50: } 95,
-{ 51: } 95,
-{ 52: } 95,
-{ 53: } 95,
-{ 54: } 95,
-{ 55: } 97,
-{ 56: } 97,
-{ 57: } 97,
-{ 58: } 97,
-{ 59: } 99,
-{ 60: } 99,
-{ 61: } 101,
-{ 62: } 101,
-{ 63: } 101,
-{ 64: } 101,
-{ 65: } 101,
-{ 66: } 101,
-{ 67: } 101,
-{ 68: } 114,
-{ 69: } 128,
-{ 70: } 128,
-{ 71: } 142,
-{ 72: } 142,
-{ 73: } 142,
-{ 74: } 142,
-{ 75: } 155,
-{ 76: } 168,
-{ 77: } 181,
-{ 78: } 182,
-{ 79: } 182,
-{ 80: } 182,
-{ 81: } 182,
-{ 82: } 182,
-{ 83: } 182,
-{ 84: } 182,
-{ 85: } 182,
-{ 86: } 186,
-{ 87: } 186,
-{ 88: } 186,
-{ 89: } 186,
-{ 90: } 186,
-{ 91: } 186,
-{ 92: } 186,
-{ 93: } 198,
-{ 94: } 199,
-{ 95: } 199,
-{ 96: } 199,
-{ 97: } 199,
-{ 98: } 199,
-{ 99: } 205,
-{ 100: } 205,
-{ 101: } 205,
-{ 102: } 208,
-{ 103: } 208,
-{ 104: } 208,
-{ 105: } 208,
-{ 106: } 208,
-{ 107: } 208,
-{ 108: } 208,
-{ 109: } 208,
-{ 110: } 208,
-{ 111: } 220,
-{ 112: } 220,
-{ 113: } 220,
-{ 114: } 222,
-{ 115: } 222,
-{ 116: } 222,
-{ 117: } 222,
-{ 118: } 228,
-{ 119: } 228,
-{ 120: } 228,
-{ 121: } 228,
-{ 122: } 236,
-{ 123: } 244,
-{ 124: } 252,
-{ 125: } 252,
-{ 126: } 252,
-{ 127: } 252
+{ 22: } 24,
+{ 23: } 24,
+{ 24: } 24,
+{ 25: } 24,
+{ 26: } 24,
+{ 27: } 24,
+{ 28: } 25,
+{ 29: } 28,
+{ 30: } 28,
+{ 31: } 28,
+{ 32: } 28,
+{ 33: } 31,
+{ 34: } 32,
+{ 35: } 32,
+{ 36: } 34,
+{ 37: } 36,
+{ 38: } 38,
+{ 39: } 40,
+{ 40: } 40,
+{ 41: } 40,
+{ 42: } 40,
+{ 43: } 42,
+{ 44: } 47,
+{ 45: } 48,
+{ 46: } 48,
+{ 47: } 48,
+{ 48: } 51,
+{ 49: } 51,
+{ 50: } 51,
+{ 51: } 52,
+{ 52: } 57,
+{ 53: } 62,
+{ 54: } 67,
+{ 55: } 72,
+{ 56: } 72,
+{ 57: } 73,
+{ 58: } 73,
+{ 59: } 73,
+{ 60: } 73,
+{ 61: } 75,
+{ 62: } 76,
+{ 63: } 76,
+{ 64: } 76,
+{ 65: } 77,
+{ 66: } 77,
+{ 67: } 79,
+{ 68: } 79,
+{ 69: } 79,
+{ 70: } 79,
+{ 71: } 79,
+{ 72: } 79,
+{ 73: } 79,
+{ 74: } 84,
+{ 75: } 85,
+{ 76: } 85,
+{ 77: } 86,
+{ 78: } 86,
+{ 79: } 86,
+{ 80: } 86,
+{ 81: } 91,
+{ 82: } 96,
+{ 83: } 101,
+{ 84: } 102,
+{ 85: } 102,
+{ 86: } 102,
+{ 87: } 103,
+{ 88: } 104,
+{ 89: } 104,
+{ 90: } 104,
+{ 91: } 104,
+{ 92: } 108,
+{ 93: } 108,
+{ 94: } 108,
+{ 95: } 108,
+{ 96: } 108,
+{ 97: } 109,
+{ 98: } 109,
+{ 99: } 117,
+{ 100: } 119,
+{ 101: } 119,
+{ 102: } 119,
+{ 103: } 120,
+{ 104: } 120,
+{ 105: } 121,
+{ 106: } 121,
+{ 107: } 122,
+{ 108: } 125,
+{ 109: } 125,
+{ 110: } 125,
+{ 111: } 125,
+{ 112: } 125,
+{ 113: } 125,
+{ 114: } 125,
+{ 115: } 125,
+{ 116: } 125,
+{ 117: } 133,
+{ 118: } 133,
+{ 119: } 133,
+{ 120: } 134,
+{ 121: } 135,
+{ 122: } 136,
+{ 123: } 137,
+{ 124: } 138,
+{ 125: } 138,
+{ 126: } 138,
+{ 127: } 138,
+{ 128: } 142,
+{ 129: } 146,
+{ 130: } 150,
+{ 131: } 150,
+{ 132: } 150,
+{ 133: } 150
 );
 
-yyah : array [0..yynstates-1] of Integer = (
-{ 0: } 0,
-{ 1: } 9,
-{ 2: } 10,
-{ 3: } 10,
-{ 4: } 10,
-{ 5: } 10,
-{ 6: } 12,
-{ 7: } 23,
-{ 8: } 23,
-{ 9: } 23,
-{ 10: } 23,
-{ 11: } 23,
-{ 12: } 23,
-{ 13: } 23,
+yygh : array [0..yynstates-1] of Integer = (
+{ 0: } 2,
+{ 1: } 14,
+{ 2: } 14,
+{ 3: } 14,
+{ 4: } 15,
+{ 5: } 16,
+{ 6: } 16,
+{ 7: } 16,
+{ 8: } 16,
+{ 9: } 17,
+{ 10: } 19,
+{ 11: } 20,
+{ 12: } 21,
+{ 13: } 22,
 { 14: } 23,
 { 15: } 23,
 { 16: } 23,
@@ -1460,375 +1809,119 @@ yyah : array [0..yynstates-1] of Integer = (
 { 18: } 23,
 { 19: } 23,
 { 20: } 23,
-{ 21: } 25,
-{ 22: } 28,
-{ 23: } 28,
-{ 24: } 28,
-{ 25: } 28,
-{ 26: } 38,
-{ 27: } 39,
-{ 28: } 39,
-{ 29: } 44,
-{ 30: } 49,
-{ 31: } 54,
-{ 32: } 59,
-{ 33: } 59,
-{ 34: } 59,
-{ 35: } 59,
-{ 36: } 60,
-{ 37: } 65,
-{ 38: } 65,
-{ 39: } 65,
-{ 40: } 65,
-{ 41: } 76,
-{ 42: } 76,
-{ 43: } 76,
-{ 44: } 78,
-{ 45: } 82,
-{ 46: } 86,
-{ 47: } 90,
-{ 48: } 94,
-{ 49: } 94,
-{ 50: } 94,
-{ 51: } 94,
-{ 52: } 94,
-{ 53: } 94,
-{ 54: } 96,
-{ 55: } 96,
-{ 56: } 96,
-{ 57: } 96,
-{ 58: } 98,
-{ 59: } 98,
-{ 60: } 100,
-{ 61: } 100,
-{ 62: } 100,
-{ 63: } 100,
-{ 64: } 100,
-{ 65: } 100,
-{ 66: } 100,
-{ 67: } 113,
-{ 68: } 127,
-{ 69: } 127,
-{ 70: } 141,
-{ 71: } 141,
-{ 72: } 141,
-{ 73: } 141,
-{ 74: } 154,
-{ 75: } 167,
-{ 76: } 180,
-{ 77: } 181,
-{ 78: } 181,
-{ 79: } 181,
-{ 80: } 181,
-{ 81: } 181,
-{ 82: } 181,
-{ 83: } 181,
-{ 84: } 181,
-{ 85: } 185,
-{ 86: } 185,
-{ 87: } 185,
-{ 88: } 185,
-{ 89: } 185,
-{ 90: } 185,
-{ 91: } 185,
-{ 92: } 197,
-{ 93: } 198,
-{ 94: } 198,
-{ 95: } 198,
-{ 96: } 198,
-{ 97: } 198,
-{ 98: } 204,
-{ 99: } 204,
-{ 100: } 204,
-{ 101: } 207,
-{ 102: } 207,
-{ 103: } 207,
-{ 104: } 207,
-{ 105: } 207,
-{ 106: } 207,
-{ 107: } 207,
-{ 108: } 207,
-{ 109: } 207,
-{ 110: } 219,
-{ 111: } 219,
-{ 112: } 219,
-{ 113: } 221,
-{ 114: } 221,
-{ 115: } 221,
-{ 116: } 221,
-{ 117: } 227,
-{ 118: } 227,
-{ 119: } 227,
-{ 120: } 227,
-{ 121: } 235,
-{ 122: } 243,
-{ 123: } 251,
-{ 124: } 251,
-{ 125: } 251,
-{ 126: } 251,
-{ 127: } 251
-);
-
-yygl : array [0..yynstates-1] of Integer = (
-{ 0: } 1,
-{ 1: } 3,
-{ 2: } 12,
-{ 3: } 12,
-{ 4: } 12,
-{ 5: } 13,
-{ 6: } 14,
-{ 7: } 15,
-{ 8: } 17,
-{ 9: } 18,
-{ 10: } 19,
-{ 11: } 20,
-{ 12: } 21,
-{ 13: } 21,
-{ 14: } 21,
-{ 15: } 21,
-{ 16: } 21,
-{ 17: } 21,
-{ 18: } 21,
-{ 19: } 21,
-{ 20: } 21,
-{ 21: } 21,
-{ 22: } 22,
-{ 23: } 25,
-{ 24: } 25,
-{ 25: } 25,
-{ 26: } 25,
-{ 27: } 28,
-{ 28: } 29,
-{ 29: } 29,
-{ 30: } 31,
-{ 31: } 33,
-{ 32: } 35,
-{ 33: } 37,
-{ 34: } 37,
-{ 35: } 37,
-{ 36: } 37,
-{ 37: } 39,
-{ 38: } 44,
-{ 39: } 45,
-{ 40: } 45,
-{ 41: } 45,
-{ 42: } 48,
-{ 43: } 48,
-{ 44: } 48,
-{ 45: } 49,
-{ 46: } 54,
-{ 47: } 59,
-{ 48: } 64,
-{ 49: } 69,
-{ 50: } 69,
-{ 51: } 70,
-{ 52: } 70,
-{ 53: } 70,
-{ 54: } 70,
-{ 55: } 72,
-{ 56: } 73,
-{ 57: } 73,
-{ 58: } 73,
-{ 59: } 74,
-{ 60: } 74,
-{ 61: } 76,
-{ 62: } 76,
-{ 63: } 76,
-{ 64: } 76,
-{ 65: } 76,
-{ 66: } 76,
-{ 67: } 76,
-{ 68: } 81,
-{ 69: } 82,
-{ 70: } 82,
-{ 71: } 83,
-{ 72: } 83,
-{ 73: } 83,
-{ 74: } 83,
-{ 75: } 88,
-{ 76: } 93,
-{ 77: } 98,
-{ 78: } 99,
-{ 79: } 99,
-{ 80: } 99,
-{ 81: } 100,
-{ 82: } 101,
-{ 83: } 101,
-{ 84: } 101,
-{ 85: } 101,
-{ 86: } 105,
-{ 87: } 105,
-{ 88: } 105,
-{ 89: } 105,
-{ 90: } 105,
-{ 91: } 106,
-{ 92: } 106,
-{ 93: } 114,
-{ 94: } 116,
-{ 95: } 116,
-{ 96: } 116,
-{ 97: } 117,
-{ 98: } 117,
-{ 99: } 118,
-{ 100: } 118,
-{ 101: } 119,
-{ 102: } 122,
-{ 103: } 122,
-{ 104: } 122,
-{ 105: } 122,
-{ 106: } 122,
-{ 107: } 122,
-{ 108: } 122,
-{ 109: } 122,
-{ 110: } 122,
-{ 111: } 130,
-{ 112: } 130,
-{ 113: } 130,
-{ 114: } 131,
-{ 115: } 132,
-{ 116: } 133,
-{ 117: } 134,
-{ 118: } 135,
-{ 119: } 135,
-{ 120: } 135,
-{ 121: } 135,
-{ 122: } 139,
-{ 123: } 143,
-{ 124: } 147,
-{ 125: } 147,
-{ 126: } 147,
-{ 127: } 147
-);
-
-yygh : array [0..yynstates-1] of Integer = (
-{ 0: } 2,
-{ 1: } 11,
-{ 2: } 11,
-{ 3: } 11,
-{ 4: } 12,
-{ 5: } 13,
-{ 6: } 14,
-{ 7: } 16,
-{ 8: } 17,
-{ 9: } 18,
-{ 10: } 19,
-{ 11: } 20,
-{ 12: } 20,
-{ 13: } 20,
-{ 14: } 20,
-{ 15: } 20,
-{ 16: } 20,
-{ 17: } 20,
-{ 18: } 20,
-{ 19: } 20,
-{ 20: } 20,
-{ 21: } 21,
-{ 22: } 24,
-{ 23: } 24,
-{ 24: } 24,
-{ 25: } 24,
-{ 26: } 27,
-{ 27: } 28,
-{ 28: } 28,
-{ 29: } 30,
-{ 30: } 32,
-{ 31: } 34,
-{ 32: } 36,
-{ 33: } 36,
-{ 34: } 36,
-{ 35: } 36,
-{ 36: } 38,
-{ 37: } 43,
-{ 38: } 44,
-{ 39: } 44,
-{ 40: } 44,
-{ 41: } 47,
-{ 42: } 47,
-{ 43: } 47,
-{ 44: } 48,
-{ 45: } 53,
-{ 46: } 58,
-{ 47: } 63,
-{ 48: } 68,
-{ 49: } 68,
-{ 50: } 69,
-{ 51: } 69,
-{ 52: } 69,
-{ 53: } 69,
+{ 21: } 23,
+{ 22: } 23,
+{ 23: } 23,
+{ 24: } 23,
+{ 25: } 23,
+{ 26: } 23,
+{ 27: } 24,
+{ 28: } 27,
+{ 29: } 27,
+{ 30: } 27,
+{ 31: } 27,
+{ 32: } 30,
+{ 33: } 31,
+{ 34: } 31,
+{ 35: } 33,
+{ 36: } 35,
+{ 37: } 37,
+{ 38: } 39,
+{ 39: } 39,
+{ 40: } 39,
+{ 41: } 39,
+{ 42: } 41,
+{ 43: } 46,
+{ 44: } 47,
+{ 45: } 47,
+{ 46: } 47,
+{ 47: } 50,
+{ 48: } 50,
+{ 49: } 50,
+{ 50: } 51,
+{ 51: } 56,
+{ 52: } 61,
+{ 53: } 66,
 { 54: } 71,
-{ 55: } 72,
+{ 55: } 71,
 { 56: } 72,
 { 57: } 72,
-{ 58: } 73,
-{ 59: } 73,
-{ 60: } 75,
+{ 58: } 72,
+{ 59: } 72,
+{ 60: } 74,
 { 61: } 75,
 { 62: } 75,
 { 63: } 75,
-{ 64: } 75,
-{ 65: } 75,
-{ 66: } 75,
-{ 67: } 80,
-{ 68: } 81,
-{ 69: } 81,
-{ 70: } 82,
-{ 71: } 82,
-{ 72: } 82,
-{ 73: } 82,
-{ 74: } 87,
-{ 75: } 92,
-{ 76: } 97,
-{ 77: } 98,
-{ 78: } 98,
-{ 79: } 98,
-{ 80: } 99,
-{ 81: } 100,
+{ 64: } 76,
+{ 65: } 76,
+{ 66: } 78,
+{ 67: } 78,
+{ 68: } 78,
+{ 69: } 78,
+{ 70: } 78,
+{ 71: } 78,
+{ 72: } 78,
+{ 73: } 83,
+{ 74: } 84,
+{ 75: } 84,
+{ 76: } 85,
+{ 77: } 85,
+{ 78: } 85,
+{ 79: } 85,
+{ 80: } 90,
+{ 81: } 95,
 { 82: } 100,
-{ 83: } 100,
-{ 84: } 100,
-{ 85: } 104,
-{ 86: } 104,
-{ 87: } 104,
-{ 88: } 104,
-{ 89: } 104,
-{ 90: } 105,
-{ 91: } 105,
-{ 92: } 113,
-{ 93: } 115,
-{ 94: } 115,
-{ 95: } 115,
-{ 96: } 116,
-{ 97: } 116,
-{ 98: } 117,
-{ 99: } 117,
+{ 83: } 101,
+{ 84: } 101,
+{ 85: } 101,
+{ 86: } 102,
+{ 87: } 103,
+{ 88: } 103,
+{ 89: } 103,
+{ 90: } 103,
+{ 91: } 107,
+{ 92: } 107,
+{ 93: } 107,
+{ 94: } 107,
+{ 95: } 107,
+{ 96: } 108,
+{ 97: } 108,
+{ 98: } 116,
+{ 99: } 118,
 { 100: } 118,
-{ 101: } 121,
-{ 102: } 121,
-{ 103: } 121,
-{ 104: } 121,
-{ 105: } 121,
+{ 101: } 118,
+{ 102: } 119,
+{ 103: } 119,
+{ 104: } 120,
+{ 105: } 120,
 { 106: } 121,
-{ 107: } 121,
-{ 108: } 121,
-{ 109: } 121,
-{ 110: } 129,
-{ 111: } 129,
-{ 112: } 129,
-{ 113: } 130,
-{ 114: } 131,
-{ 115: } 132,
-{ 116: } 133,
-{ 117: } 134,
-{ 118: } 134,
-{ 119: } 134,
+{ 107: } 124,
+{ 108: } 124,
+{ 109: } 124,
+{ 110: } 124,
+{ 111: } 124,
+{ 112: } 124,
+{ 113: } 124,
+{ 114: } 124,
+{ 115: } 124,
+{ 116: } 132,
+{ 117: } 132,
+{ 118: } 132,
+{ 119: } 133,
 { 120: } 134,
-{ 121: } 138,
-{ 122: } 142,
-{ 123: } 146,
-{ 124: } 146,
-{ 125: } 146,
-{ 126: } 146,
-{ 127: } 146
+{ 121: } 135,
+{ 122: } 136,
+{ 123: } 137,
+{ 124: } 137,
+{ 125: } 137,
+{ 126: } 137,
+{ 127: } 141,
+{ 128: } 145,
+{ 129: } 149,
+{ 130: } 149,
+{ 131: } 149,
+{ 132: } 149,
+{ 133: } 149
 );
 
 yyr : array [1..yynrules] of YYRRec = (
@@ -1847,93 +1940,99 @@ yyr : array [1..yynrules] of YYRRec = (
 { 13: } ( len: 1; sym: -15 ),
 { 14: } ( len: 1; sym: -16 ),
 { 15: } ( len: 1; sym: -17 ),
-{ 16: } ( len: 1; sym: -17 ),
-{ 17: } ( len: 1; sym: -18 ),
-{ 18: } ( len: 1; sym: -19 ),
+{ 16: } ( len: 1; sym: -18 ),
+{ 17: } ( len: 1; sym: -19 ),
+{ 18: } ( len: 1; sym: -20 ),
 { 19: } ( len: 1; sym: -20 ),
 { 20: } ( len: 1; sym: -21 ),
 { 21: } ( len: 1; sym: -22 ),
 { 22: } ( len: 1; sym: -23 ),
-{ 23: } ( len: 1; sym: -23 ),
-{ 24: } ( len: 1; sym: -24 ),
-{ 25: } ( len: 1; sym: -25 ),
-{ 26: } ( len: 1; sym: -25 ),
-{ 27: } ( len: 1; sym: -26 ),
-{ 28: } ( len: 0; sym: -29 ),
-{ 29: } ( len: 0; sym: -31 ),
-{ 30: } ( len: 6; sym: -2 ),
-{ 31: } ( len: 0; sym: -30 ),
-{ 32: } ( len: 1; sym: -30 ),
-{ 33: } ( len: 0; sym: -27 ),
-{ 34: } ( len: 2; sym: -27 ),
-{ 35: } ( len: 2; sym: -27 ),
-{ 36: } ( len: 2; sym: -32 ),
-{ 37: } ( len: 2; sym: -32 ),
-{ 38: } ( len: 0; sym: -33 ),
-{ 39: } ( len: 3; sym: -32 ),
-{ 40: } ( len: 0; sym: -35 ),
-{ 41: } ( len: 4; sym: -32 ),
-{ 42: } ( len: 0; sym: -37 ),
-{ 43: } ( len: 4; sym: -32 ),
-{ 44: } ( len: 0; sym: -38 ),
-{ 45: } ( len: 4; sym: -32 ),
-{ 46: } ( len: 0; sym: -39 ),
-{ 47: } ( len: 4; sym: -32 ),
-{ 48: } ( len: 3; sym: -32 ),
-{ 49: } ( len: 2; sym: -32 ),
-{ 50: } ( len: 0; sym: -34 ),
-{ 51: } ( len: 3; sym: -34 ),
-{ 52: } ( len: 1; sym: -36 ),
-{ 53: } ( len: 2; sym: -36 ),
-{ 54: } ( len: 3; sym: -36 ),
-{ 55: } ( len: 1; sym: -36 ),
-{ 56: } ( len: 2; sym: -36 ),
-{ 57: } ( len: 3; sym: -36 ),
-{ 58: } ( len: 1; sym: -41 ),
-{ 59: } ( len: 1; sym: -41 ),
-{ 60: } ( len: 1; sym: -41 ),
-{ 61: } ( len: 2; sym: -41 ),
-{ 62: } ( len: 2; sym: -41 ),
-{ 63: } ( len: 1; sym: -40 ),
-{ 64: } ( len: 2; sym: -40 ),
-{ 65: } ( len: 3; sym: -40 ),
-{ 66: } ( len: 1; sym: -40 ),
-{ 67: } ( len: 2; sym: -40 ),
-{ 68: } ( len: 3; sym: -40 ),
-{ 69: } ( len: 1; sym: -42 ),
-{ 70: } ( len: 0; sym: -44 ),
-{ 71: } ( len: 2; sym: -28 ),
-{ 72: } ( len: 0; sym: -45 ),
-{ 73: } ( len: 0; sym: -46 ),
-{ 74: } ( len: 5; sym: -28 ),
-{ 75: } ( len: 2; sym: -28 ),
-{ 76: } ( len: 1; sym: -28 ),
-{ 77: } ( len: 2; sym: -28 ),
+{ 23: } ( len: 1; sym: -24 ),
+{ 24: } ( len: 1; sym: -25 ),
+{ 25: } ( len: 1; sym: -26 ),
+{ 26: } ( len: 1; sym: -26 ),
+{ 27: } ( len: 1; sym: -27 ),
+{ 28: } ( len: 1; sym: -28 ),
+{ 29: } ( len: 1; sym: -28 ),
+{ 30: } ( len: 1; sym: -29 ),
+{ 31: } ( len: 0; sym: -32 ),
+{ 32: } ( len: 0; sym: -34 ),
+{ 33: } ( len: 6; sym: -2 ),
+{ 34: } ( len: 0; sym: -33 ),
+{ 35: } ( len: 1; sym: -33 ),
+{ 36: } ( len: 0; sym: -30 ),
+{ 37: } ( len: 2; sym: -30 ),
+{ 38: } ( len: 2; sym: -30 ),
+{ 39: } ( len: 2; sym: -35 ),
+{ 40: } ( len: 2; sym: -35 ),
+{ 41: } ( len: 0; sym: -36 ),
+{ 42: } ( len: 3; sym: -35 ),
+{ 43: } ( len: 0; sym: -38 ),
+{ 44: } ( len: 4; sym: -35 ),
+{ 45: } ( len: 0; sym: -40 ),
+{ 46: } ( len: 4; sym: -35 ),
+{ 47: } ( len: 0; sym: -41 ),
+{ 48: } ( len: 4; sym: -35 ),
+{ 49: } ( len: 0; sym: -42 ),
+{ 50: } ( len: 4; sym: -35 ),
+{ 51: } ( len: 3; sym: -35 ),
+{ 52: } ( len: 2; sym: -35 ),
+{ 53: } ( len: 1; sym: -35 ),
+{ 54: } ( len: 1; sym: -35 ),
+{ 55: } ( len: 1; sym: -35 ),
+{ 56: } ( len: 0; sym: -37 ),
+{ 57: } ( len: 3; sym: -37 ),
+{ 58: } ( len: 1; sym: -39 ),
+{ 59: } ( len: 2; sym: -39 ),
+{ 60: } ( len: 3; sym: -39 ),
+{ 61: } ( len: 1; sym: -39 ),
+{ 62: } ( len: 2; sym: -39 ),
+{ 63: } ( len: 3; sym: -39 ),
+{ 64: } ( len: 1; sym: -44 ),
+{ 65: } ( len: 1; sym: -44 ),
+{ 66: } ( len: 1; sym: -44 ),
+{ 67: } ( len: 2; sym: -44 ),
+{ 68: } ( len: 2; sym: -44 ),
+{ 69: } ( len: 1; sym: -43 ),
+{ 70: } ( len: 2; sym: -43 ),
+{ 71: } ( len: 3; sym: -43 ),
+{ 72: } ( len: 1; sym: -43 ),
+{ 73: } ( len: 2; sym: -43 ),
+{ 74: } ( len: 3; sym: -43 ),
+{ 75: } ( len: 1; sym: -45 ),
+{ 76: } ( len: 0; sym: -47 ),
+{ 77: } ( len: 2; sym: -31 ),
 { 78: } ( len: 0; sym: -48 ),
-{ 79: } ( len: 0; sym: -50 ),
-{ 80: } ( len: 6; sym: -43 ),
-{ 81: } ( len: 1; sym: -47 ),
-{ 82: } ( len: 0; sym: -52 ),
-{ 83: } ( len: 4; sym: -47 ),
-{ 84: } ( len: 0; sym: -49 ),
-{ 85: } ( len: 2; sym: -49 ),
-{ 86: } ( len: 2; sym: -49 ),
-{ 87: } ( len: 2; sym: -49 ),
-{ 88: } ( len: 2; sym: -49 ),
-{ 89: } ( len: 2; sym: -49 ),
-{ 90: } ( len: 0; sym: -54 ),
-{ 91: } ( len: 3; sym: -53 ),
-{ 92: } ( len: 1; sym: -53 ),
-{ 93: } ( len: 0; sym: -51 ),
-{ 94: } ( len: 0; sym: -56 ),
-{ 95: } ( len: 4; sym: -51 ),
+{ 79: } ( len: 0; sym: -49 ),
+{ 80: } ( len: 5; sym: -31 ),
+{ 81: } ( len: 2; sym: -31 ),
+{ 82: } ( len: 1; sym: -31 ),
+{ 83: } ( len: 2; sym: -31 ),
+{ 84: } ( len: 0; sym: -51 ),
+{ 85: } ( len: 0; sym: -53 ),
+{ 86: } ( len: 6; sym: -46 ),
+{ 87: } ( len: 1; sym: -50 ),
+{ 88: } ( len: 0; sym: -55 ),
+{ 89: } ( len: 4; sym: -50 ),
+{ 90: } ( len: 0; sym: -52 ),
+{ 91: } ( len: 2; sym: -52 ),
+{ 92: } ( len: 2; sym: -52 ),
+{ 93: } ( len: 2; sym: -52 ),
+{ 94: } ( len: 2; sym: -52 ),
+{ 95: } ( len: 2; sym: -52 ),
 { 96: } ( len: 0; sym: -57 ),
-{ 97: } ( len: 4; sym: -51 ),
-{ 98: } ( len: 0; sym: -58 ),
-{ 99: } ( len: 4; sym: -51 ),
-{ 100: } ( len: 2; sym: -51 ),
-{ 101: } ( len: 0; sym: -55 ),
-{ 102: } ( len: 1; sym: -55 )
+{ 97: } ( len: 3; sym: -56 ),
+{ 98: } ( len: 1; sym: -56 ),
+{ 99: } ( len: 0; sym: -54 ),
+{ 100: } ( len: 0; sym: -59 ),
+{ 101: } ( len: 4; sym: -54 ),
+{ 102: } ( len: 0; sym: -60 ),
+{ 103: } ( len: 4; sym: -54 ),
+{ 104: } ( len: 0; sym: -61 ),
+{ 105: } ( len: 4; sym: -54 ),
+{ 106: } ( len: 2; sym: -54 ),
+{ 107: } ( len: 0; sym: -58 ),
+{ 108: } ( len: 1; sym: -58 )
 );
 
 
@@ -2278,13 +2377,13 @@ function yylex : integer;
     function lookup(key : String; var tok : integer) : boolean;
       (* table of Yacc keywords (unstropped): *)
       const
-        no_of_entries = 11;
-        max_entry_length = 8;
+        no_of_entries = 14;
+        max_entry_length = 9;
         keys : array [1..no_of_entries] of String[max_entry_length] = (
-          '0', '2', 'binary', 'left', 'nonassoc', 'prec', 'right',
+          '0', '2', 'binary', 'classfunc', 'classname', 'classvar', 'left', 'nonassoc', 'prec', 'right',
           'start', 'term', 'token', 'type');
         toks : array [1..no_of_entries] of integer = (
-          PTOKEN, PNONASSOC, PNONASSOC, PLEFT, PNONASSOC, PPREC, PRIGHT,
+          PTOKEN, PNONASSOC, PNONASSOC, PCLASSFUNC, PCLASSNAME, PCLASSVAR, PLEFT, PNONASSOC, PPREC, PRIGHT,
           PSTART, PTOKEN, PTOKEN, PTYPE);
       var m, n, k : integer;
       begin
@@ -2308,6 +2407,7 @@ function yylex : integer;
       end(*lookup*);
     var
       keywstr : String;
+      trail: String;
       tok : integer;
     begin
       inc(cno);
@@ -2355,7 +2455,52 @@ function yylex : integer;
                   inc(cno)
                 end;
               if lookup(keywstr, tok) then
-                scan_keyword := tok
+              begin
+                if (tok = PCLASSNAME) or
+                   (tok = PCLASSFUNC) or
+                   (tok = PCLASSVAR) then
+                begin
+                  if object_oriented then
+                  begin
+                    trail := Copy(line, cno, Length(Line) { will trunc });
+                    if (tok = PCLASSNAME) then
+                    begin
+                      trail := Trim(trail);
+                      if SetClassName(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end
+                    else if (tok = PCLASSFUNC) then
+                    begin
+                      if AddClassFunc(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end
+                    else // tok = PCLASSVAR
+                    begin
+                      if AddClassVar(trail) = 0 then
+                      begin
+                        scan_keyword := tok; // Good token.
+                        cno := Succ(Length(Line)); // Swallow the rest of the line.
+                      end
+                      else
+                        scan_keyword := ILLEGAL;
+                    end;
+                  end
+                  else
+                    scan_keyword := ILLEGAL; //Need oo mode to scan these.
+                end
+                else
+                  scan_keyword := tok;
+              end
               else
                 scan_keyword := ILLEGAL
             end;
@@ -2427,8 +2572,8 @@ begin
 
   for i := 1 to paramCount do
     if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-X' then
-        experiment := true
+      if upper(paramStr(i))='-OO' then
+        object_oriented := true
       else if upper(paramStr(i))='-V' then
         verbose := true
       else if upper(paramStr(i))='-D' then
@@ -2471,12 +2616,19 @@ begin
 
   (* search code template in current directory, then on path where Yacc
      was executed from: *)
-  codfilename := codfilepath + 'yyparse.cod';
+  if object_oriented then
+    codfilename := codfilepath + 'yyparse_oo.cod'
+  else
+    codfilename := codfilepath + 'yyparse.cod';
   assign(yycod, codfilename);
   reset(yycod);
   if ioresult<>0 then
     begin
-      codfilename := codfilepath+'..\..\yyparse.cod';
+      if object_oriented then
+        codfilename := codfilepath+'..\..\yyparse_oo.cod'
+      else
+        codfilename := codfilepath+'..\..\yyparse.cod';
+
       assign(yycod, codfilename);
       reset(yycod);
       if ioresult<>0 then fatal(cannot_open_file+codfilename);
@@ -2506,9 +2658,8 @@ begin
 
   (* print statistics: *)
 
-  if experiment then
-    if undefined_nt > 0 then
-      writeln(undefined_nt, ' undefined nonterminals.');
+  if undefined_nt > 0 then
+    writeln(undefined_nt, ' undefined nonterminals.');
   if errors>0 then
     writeln( lno, ' lines, ',
              errors, ' errors found.' )

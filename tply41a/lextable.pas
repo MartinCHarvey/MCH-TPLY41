@@ -140,6 +140,7 @@ TransTable = array [1..max_trans] of TransTableEntry;
 
 var
 
+object_oriented   : Boolean;
 verbose           : Boolean;          (* status of the verbose option *)
 optimize          : Boolean;          (* status of the optimization option *)
 

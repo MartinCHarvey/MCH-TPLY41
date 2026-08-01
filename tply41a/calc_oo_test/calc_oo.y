@@ -6,21 +6,22 @@ unit
 
 interface
 
-{$DEFINE OO_LEXLIB}
-
 uses
   calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
 
-{$DEFINE INSERT_IMPLEMENTATION_CALUSE}
-
-var
-  yyp_result: integer;
-  lastIdent, lastDef: string;
-  identList: TStringList;
-
-  procedure AddDef(ident:string; val: integer);
-  function lookupLastIdent: integer;
 %}
+
+
+%classname TCalcParser
+%classvar  yyp_result: integer;
+%classvar  lastIdent, lastDef: string;
+%classvar  identList: TStringList;
+%classvar  Lexer: TCalcLexer;
+
+%classfunc  procedure AddDef(ident:string; val: integer);
+%classfunc  function lookupLastIdent: integer;
+%classfunc  constructor Create;
+%classfunc  destructor Destroy; override;
 
 %token
         _number
@@ -62,7 +63,7 @@ calc_def_right  :
         ;
 
 ident           :
-                _ident                                  { lastIdent := yytoken_text; }
+                _ident                                  { lastIdent := Lexer.yytoken_text; }
         ;
 
 calc_expression :
@@ -84,12 +85,12 @@ calc_unary_expr :
         ;
 
 number          :
-                _number         { $$ := StrToInt(string(yytoken_text)); }
+                _number         { $$ := StrToInt(string(Lexer.yytoken_text)); }
         ;
 
 %%
 
-procedure AddDef(ident:string; val: integer);
+procedure TCalcParser.AddDef(ident:string; val: integer);
 begin
   if IdentList.IndexOf(ident) >= 0 then
   begin
@@ -100,7 +101,7 @@ begin
         IdentList.AddObject(ident, Pointer(val));
 end;
 
-function lookupLastIdent: integer;
+function TCalcParser.lookupLastIdent: integer;
 var
   Idx: integer;
 begin
@@ -115,9 +116,20 @@ begin
     result := Integer(IdentList.Objects[Idx]);
 end;
 
-initialization
+constructor TCalcParser.Create;
+begin
+  inherited;
   IdentList := TStringList.Create;
-finalization
+  Lexer := TCalcLexer.Create;
+  //TODO - Init / reset?
+end;
+
+destructor TCalcParser.Destroy;
+begin
+  Lexer.Free;
   IdentList.Free;
+  inherited;
+end;
+
 end.
 
