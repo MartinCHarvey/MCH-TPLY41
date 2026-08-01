@@ -24,7 +24,7 @@ const _semi = 265;
 const _eq = 266;
 { oo_def }
 type
-  TCalcParser = class 
+  TCalcParser = class (TPLYParser)
     public
 { oo_classvars }
       yyp_result: integer;
@@ -39,7 +39,6 @@ type
   yyval : YYSType;
   yylval : YYSType;
 
-  function yylex : Integer;
   function yyparse : Integer;
 
 { oo_classfuncs }
@@ -580,7 +579,7 @@ next:
   if (yyd[yystate]=0) and (yychar=-1) then
     (* get next symbol *)
     begin
-      yychar := yylex; if yychar<0 then yychar := 0;
+      yychar := Lexer.yylex; if yychar<0 then yychar := 0;
     end;
 
   if yydebug then writeln('state ', yystate, ', char ', yychar);

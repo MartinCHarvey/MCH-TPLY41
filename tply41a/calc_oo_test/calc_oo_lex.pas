@@ -389,9 +389,7 @@ action:
 
   if not yydone then goto start;
 
-{$IFDEF OO_LEXLIB}
   update_token_text;
-{$ENDIF}
 
   yylex := yyretval;
 

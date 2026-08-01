@@ -20,49 +20,55 @@ var
   Tmp: Text;
   TmpName, TmpOutName: string;
   PResult: integer;
+  Parser: TCalcParser;
 
 begin
   try
-    { TODO -oUser -cConsole Main : Insert code here }
-    TmpName := IOUtils.TPath.GetTempFileName;
-    TmpOutName := IOUtils.TPath.GetTempFileName;
-    Assign(Tmp, TmpName);
-    Rewrite(Tmp);
+    Parser := TCalcParser.Create;
+    try
+      { TODO -oUser -cConsole Main : Insert code here }
+      TmpName := IOUtils.TPath.GetTempFileName;
+      TmpOutName := IOUtils.TPath.GetTempFileName;
+      Assign(Tmp, TmpName);
+      Rewrite(Tmp);
 
-    WriteLn('Type optional definitions terminated with semicolon, and an expression');
-    WriteLn('End with a blank line.');
-    WriteLn('eg: foo = 1;');
-    WriteLn('eg: bar = 1;');
-    WriteLn('eg: foo + bar');
-    repeat
-      ReadLn(StrInput);
-      WriteLn(Tmp, StrInput);
-    until Length(StrInput) = 0;
-
-    Close(Tmp);
-
-    Assign(yyinput, TmpName);
-    Reset(yyInput);
-    Assign(yyoutput, TmpOutName);
-    Rewrite(yyOutput);
-    PResult := yyparse;
-    if (PResult = 0) then
-    begin
-      WriteLn('Parsed expression OK.');
-      WriteLn('Result : ' + IntToStr(yyp_result));
-    end
-    else
-    begin
-      WriteLn('Expression or parse bad:');
-      Reset(yyoutput);
+      WriteLn('Type optional definitions terminated with semicolon, and an expression');
+      WriteLn('End with a blank line.');
+      WriteLn('eg: foo = 1;');
+      WriteLn('eg: bar = 1;');
+      WriteLn('eg: foo + bar');
       repeat
-        ReadLn(yyoutput, StrInput);
-        WriteLn(StrInput);
-      until Eof(yyoutput);
-      Close(yyoutput);
+        ReadLn(StrInput);
+        WriteLn(Tmp, StrInput);
+      until Length(StrInput) = 0;
+
+      Close(Tmp);
+
+      Assign(Parser.Lexer.yyinput, TmpName);
+      Reset(Parser.Lexer.yyInput);
+      Assign(Parser.Lexer.yyoutput, TmpOutName);
+      Rewrite(Parser.Lexer.yyOutput);
+      PResult := Parser.yyparse;
+      if (PResult = 0) then
+      begin
+        WriteLn('Parsed expression OK.');
+        WriteLn('Result : ' + IntToStr(Parser.yyp_result));
+      end
+      else
+      begin
+        WriteLn('Expression or parse bad:');
+        Reset(Parser.Lexer.yyoutput);
+        repeat
+          ReadLn(Parser.Lexer.yyoutput, StrInput);
+          WriteLn(StrInput);
+        until Eof(Parser.Lexer.yyoutput);
+        Close(Parser.Lexer.yyoutput);
+      end;
+      DeleteFile(TmpName);
+      DeleteFile(TmpOutName);
+    finally
+      Parser.Free;
     end;
-    DeleteFile(TmpName);
-    DeleteFile(TmpOutName);
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);

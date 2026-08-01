@@ -120,6 +120,7 @@ type
     yywrapped         : Boolean;
 
     constructor Create;
+    destructor Destroy; override;
 
     (* I/O routines:
 
@@ -504,6 +505,12 @@ begin
   FillChar(yyoutput, sizeof(yyoutput), 0);
   yylineno := 0;
   yyclear;
+end;
+
+destructor TPLYLexer.Destroy;
+begin
+  yywrap;
+  inherited;
 end;
 
 end(*LexLib*).

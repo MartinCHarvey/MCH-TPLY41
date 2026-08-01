@@ -277,7 +277,7 @@ begin
     WriteLn(yyout, 'type');
     if GetClassName(Tmp) = 0 then
     begin
-      WriteLn(yyout, '  ' + Tmp + ' = class ');
+      WriteLn(yyout, '  ' + Tmp + ' = class (TPLYParser)');
       WriteLn(yyout, '    public');
     end
     else
