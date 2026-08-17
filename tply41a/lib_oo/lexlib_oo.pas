@@ -49,6 +49,21 @@ const
   max_matches = 1024;
   max_rules   = 256;
 
+{
+  TODO - Check/Change usages of:
+
+  yyinput, yyoutput: Change text to TStream.
+  buf: Change to array of AnsiChar (0/1 based change).
+  yyline: Change to array of AnsiChar (0/1 based change).
+  yytext: Change to array of AnsiChar (0/1 based change).
+  yystext: Change to array of AnsiChar (0/1 based change).
+
+  Later.
+  _yytoken_text: AnsiString not supported by mobile, convert to unicode at this point.
+  _yyprev_token_text: AnsiString not supported by mobile, convert to unicode at this point.
+
+}
+
 type
 {$IFDEF USE_TRACKABLES}
   TPLYLexer = class(TTrackable)
@@ -63,6 +78,7 @@ type
     yyreject   : Boolean; (* current match rejected? *)
     yydone     : Boolean; (* yylex return value set? *)
     yyretval   : Integer; (* yylex return value *)
+
     _yytoken_text: AnsiString;
     _yyprevtoken_text: AnsiString;
     bufptr : Integer;
