@@ -22,6 +22,7 @@ const _rparen = 263;
 const _ident = 264;
 const _semi = 265;
 const _eq = 266;
+const LEX_ERROR = 267;
 { oo_def }
 type
   TCalcParser = class (TPLYParser)
@@ -30,7 +31,6 @@ type
       yyp_result: integer;
       lastIdent, lastDef: string;
       identList: TStringList;
-      Lexer: TCalcLexer;
 {.cod}
 
   yystate, yysp, yyn : Integer;
@@ -703,7 +703,6 @@ begin
   inherited;
   IdentList := TStringList.Create;
   Lexer := TCalcLexer.Create;
-  //TODO - Init / reset?
 end;
 
 destructor TCalcParser.Destroy;

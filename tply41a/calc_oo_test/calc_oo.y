@@ -16,7 +16,6 @@ uses
 %classvar  yyp_result: integer;
 %classvar  lastIdent, lastDef: string;
 %classvar  identList: TStringList;
-%classvar  Lexer: TCalcLexer;
 
 %classfunc  procedure AddDef(ident:string; val: integer);
 %classfunc  function lookupLastIdent: integer;
@@ -34,6 +33,7 @@ uses
         _ident
         _semi
         _eq
+        LEX_ERROR       /* Does not appear anywhere in the grammar */
 
 %start
         calc_result
@@ -121,7 +121,6 @@ begin
   inherited;
   IdentList := TStringList.Create;
   Lexer := TCalcLexer.Create;
-  //TODO - Init / reset?
 end;
 
 destructor TCalcParser.Destroy;
