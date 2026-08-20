@@ -10,7 +10,8 @@ unit
 interface
 
 uses
-  calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
+  calc_oo_lex, lexlib_oo, yacclib_oo, calc_oo_parse_debug,
+  SysUtils, Classes;
 
 const _number = 257;
 const _plus = 258;
@@ -22,6 +23,7 @@ const _rparen = 263;
 const _ident = 264;
 const _semi = 265;
 const _eq = 266;
+const LEX_ERROR = 267;
 { oo_def }
 type
   TCalcParser = class (TPLYParser)
@@ -30,7 +32,6 @@ type
       yyp_result: integer;
       lastIdent, lastDef: string;
       identList: TStringList;
-      Lexer: TCalcLexer;
 {.cod}
 
   yystate, yysp, yyn : Integer;
@@ -46,6 +47,7 @@ type
       function lookupLastIdent: integer;
       constructor Create;
       destructor Destroy; override;
+      procedure yyerror ( msg : String ); override;
 { oo_impl }
   end;
 
@@ -703,7 +705,6 @@ begin
   inherited;
   IdentList := TStringList.Create;
   Lexer := TCalcLexer.Create;
-  //TODO - Init / reset?
 end;
 
 destructor TCalcParser.Destroy;
@@ -711,6 +712,22 @@ begin
   Lexer.Free;
   IdentList.Free;
   inherited;
+end;
+
+procedure TCalcParser.yyerror ( msg : String );
+var
+  Debug: TStringList;
+  i: integer;
+begin
+  inherited;
+  Debug := GetStateDebug(yystate);
+  if Assigned(Debug) then
+  begin
+    Lexer.YYOutWriteLn('Parser state debug: ');
+    for i := 0 to Pred(Debug.Count) do
+      Lexer.YYOutWriteLn(Debug[i]);
+    Debug.Free;
+  end;
 end;
 
 end.

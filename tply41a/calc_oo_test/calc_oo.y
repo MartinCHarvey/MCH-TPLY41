@@ -7,7 +7,8 @@ unit
 interface
 
 uses
-  calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
+  calc_oo_lex, lexlib_oo, yacclib_oo, calc_oo_parse_debug,
+  SysUtils, Classes;
 
 %}
 
@@ -16,12 +17,12 @@ uses
 %classvar  yyp_result: integer;
 %classvar  lastIdent, lastDef: string;
 %classvar  identList: TStringList;
-%classvar  Lexer: TCalcLexer;
 
 %classfunc  procedure AddDef(ident:string; val: integer);
 %classfunc  function lookupLastIdent: integer;
 %classfunc  constructor Create;
 %classfunc  destructor Destroy; override;
+%classfunc  procedure yyerror ( msg : String ); override;
 
 %token
         _number
@@ -34,6 +35,7 @@ uses
         _ident
         _semi
         _eq
+        LEX_ERROR       /* Does not appear anywhere in the grammar */
 
 %start
         calc_result
@@ -121,7 +123,6 @@ begin
   inherited;
   IdentList := TStringList.Create;
   Lexer := TCalcLexer.Create;
-  //TODO - Init / reset?
 end;
 
 destructor TCalcParser.Destroy;
@@ -129,6 +130,22 @@ begin
   Lexer.Free;
   IdentList.Free;
   inherited;
+end;
+
+procedure TCalcParser.yyerror ( msg : String );
+var
+  Debug: TStringList;
+  i: integer;
+begin
+  inherited;
+  Debug := GetStateDebug(yystate);
+  if Assigned(Debug) then
+  begin
+    Lexer.YYOutWriteLn('Parser state debug: ');
+    for i := 0 to Pred(Debug.Count) do
+      Lexer.YYOutWriteLn(Debug[i]);
+    Debug.Free;
+  end;
 end;
 
 end.

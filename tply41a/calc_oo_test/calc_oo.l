@@ -37,6 +37,7 @@ uses
 \n              ;
 ;                       return(_semi);
 =                       return(_eq);
+.                       return (LEX_ERROR);
 
 %%
 

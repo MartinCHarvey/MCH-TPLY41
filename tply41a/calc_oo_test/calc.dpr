@@ -6,6 +6,7 @@ program calc;
 
 uses
   System.SysUtils,
+  System.Classes,
   calc_oo_parse in 'calc_oo_parse.pas',
   calc_oo_lex in 'calc_oo_lex.pas',
   yacclib_oo in '..\lib_oo\yacclib_oo.pas',
@@ -13,7 +14,8 @@ uses
   lexdstr in '..\lexdstr.pas',
   IoUtils,
   Trackables in '..\..\..\..\Delphi XE Progs\Common\Tracking\Trackables.pas',
-  BinaryTree in '..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas';
+  BinaryTree in '..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas',
+  calc_oo_parse_debug in 'calc_oo_parse_debug.pas';
 
 var
   StrInput: string;
@@ -21,6 +23,7 @@ var
   TmpName, TmpOutName: string;
   PResult: integer;
   Parser: TCalcParser;
+  More: boolean;
 
 begin
   try
@@ -44,10 +47,8 @@ begin
 
       Close(Tmp);
 
-      Assign(Parser.Lexer.yyinput, TmpName);
-      Reset(Parser.Lexer.yyInput);
-      Assign(Parser.Lexer.yyoutput, TmpOutName);
-      Rewrite(Parser.Lexer.yyOutput);
+      Parser.Lexer.yyinput := TFileStream.Create(TmpName, fmOpenRead);
+      Parser.Lexer.yyoutput := TFileStream.Create(TmpOutName, fmCreate);
       PResult := Parser.yyparse;
       if (PResult = 0) then
       begin
@@ -57,12 +58,11 @@ begin
       else
       begin
         WriteLn('Expression or parse bad:');
-        Reset(Parser.Lexer.yyoutput);
+        Parser.Lexer.yyoutput.Seek(0, soFromBeginning);
         repeat
-          ReadLn(Parser.Lexer.yyoutput, StrInput);
+          More := Parser.Lexer.YYOutReadLn(StrInput);
           WriteLn(StrInput);
-        until Eof(Parser.Lexer.yyoutput);
-        Close(Parser.Lexer.yyoutput);
+        until not More;
       end;
       DeleteFile(TmpName);
       DeleteFile(TmpOutName);

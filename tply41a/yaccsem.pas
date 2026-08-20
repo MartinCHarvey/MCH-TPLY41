@@ -329,16 +329,20 @@ begin
   if object_oriented then
   begin
     Ret := GetClassName(Tmp);
-    Assert(Ret = 0);
-    WriteLn(yyout, '{ oo_impl }');
-    WriteLn(yyout, '  end;');
-    WriteLn(yyout);
-    WriteLn(yyout, 'implementation');
-    WriteLn(yyout);
+    if Ret = 0 then
+    begin
+      WriteLn(yyout, '{ oo_impl }');
+      WriteLn(yyout, '  end;');
+      WriteLn(yyout);
+      WriteLn(yyout, 'implementation');
+      WriteLn(yyout);
 
-    WriteLn(yyout, 'function ' + Tmp + '.yyparse : Integer;');
-    WriteLn(yyout);
-    WriteLn(yyout, 'procedure yyaction ( yyruleno : Integer );');
+      WriteLn(yyout, 'function ' + Tmp + '.yyparse : Integer;');
+      WriteLn(yyout);
+      WriteLn(yyout, 'procedure yyaction ( yyruleno : Integer );');
+    end
+    else
+      error('class name not defined.');
   end;
 end;
 

@@ -7,8 +7,8 @@ unit YaccLib_oo;
 
 interface
 
-{$IFDEF USE_TRACKABLES}
 uses
+{$IFDEF USE_TRACKABLES}
   Trackables,
 {$ENDIF}
   lexlib_oo;
@@ -37,7 +37,7 @@ type
                            parser *)
     yydebug  : Boolean; (* set to true to enable debugging output of parser *)
 
-    procedure yyerror ( msg : String );
+    procedure yyerror ( msg : String ); virtual;
       (* error message printing routine used by the parser *)
 
     procedure yyclearin;
@@ -64,28 +64,22 @@ type
 
 implementation
 
+uses
+  SysUtils;
+
+const
+  CR_LF = #13 + #10;
+
 procedure TPLYParser.yyerror ( msg : String );
   begin
-    if not Lexer.yywrapped then
-    begin
-      writeln(Lexer.yyoutput, ' Line: ', Lexer.yytokenlineno,
-                        ' Col: ', Lexer.yytokencolno,
-                        ' Token: ''', Lexer.yytoken_text,
-                        ''' PrevLine: ', Lexer.yyprevtokenlineno,
-                        ' PrevCol: ', Lexer.yyprevtokencolno,
-                        ' PrevToken: ''', Lexer.yyprevtoken_text,
-                        ''' ', msg);
-    end
-    else
-    begin
-      writeln(          ' Line: ', Lexer.yytokenlineno,
-                        ' Col: ', Lexer.yytokencolno,
-                        ' Token: ''', Lexer.yytoken_text,
-                        ''' PrevLine: ', Lexer.yyprevtokenlineno,
-                        ' PrevCol: ', Lexer.yyprevtokencolno,
-                        ' PrevToken: ''', Lexer.yyprevtoken_text,
-                        ''' ', msg);
-    end;
+    Lexer.YYOutWriteLn(msg);
+    //Could encounter error *after* yywrap, so streams left open.
+    Lexer.YYOutWriteLn( ' Line: ' + IntToStr(Lexer.yytokenlineno) + CR_LF +
+                        ' Col: ' + IntToStr(Lexer.yytokencolno) + CR_LF +
+                        ' Token: ''' + Lexer.yytoken_text + '''' + CR_LF +
+                        ' PrevLine: ' + IntToStr(Lexer.yyprevtokenlineno) + CR_LF +
+                        ' PrevCol: ' + IntToStr(Lexer.yyprevtokencolno) + CR_LF +
+                        ' PrevToken: ''' + Lexer.yyprevtoken_text + '''' + CR_LF);
   end(*yyerrmsg*);
 
 procedure TPLYParser.yyclearin;
