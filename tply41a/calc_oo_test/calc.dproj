@@ -102,6 +102,7 @@
         <DCCReference Include="..\lexdstr.pas"/>
         <DCCReference Include="..\..\..\..\Delphi XE Progs\Common\Tracking\Trackables.pas"/>
         <DCCReference Include="..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas"/>
+        <DCCReference Include="calc_oo_parse_debug.pas"/>
         <None Include="calc_oo.l"/>
         <None Include="calc_oo.y"/>
         <None Include="calc_oo_parse.lst"/>

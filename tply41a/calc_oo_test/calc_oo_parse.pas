@@ -10,7 +10,8 @@ unit
 interface
 
 uses
-  calc_oo_lex, lexlib_oo, yacclib_oo, SysUtils, Classes;
+  calc_oo_lex, lexlib_oo, yacclib_oo, calc_oo_parse_debug,
+  SysUtils, Classes;
 
 const _number = 257;
 const _plus = 258;
@@ -46,6 +47,7 @@ type
       function lookupLastIdent: integer;
       constructor Create;
       destructor Destroy; override;
+      procedure yyerror ( msg : String ); override;
 { oo_impl }
   end;
 
@@ -710,6 +712,22 @@ begin
   Lexer.Free;
   IdentList.Free;
   inherited;
+end;
+
+procedure TCalcParser.yyerror ( msg : String );
+var
+  Debug: TStringList;
+  i: integer;
+begin
+  inherited;
+  Debug := GetStateDebug(yystate);
+  if Assigned(Debug) then
+  begin
+    Lexer.YYOutWriteLn('Parser state debug: ');
+    for i := 0 to Pred(Debug.Count) do
+      Lexer.YYOutWriteLn(Debug[i]);
+    Debug.Free;
+  end;
 end;
 
 end.

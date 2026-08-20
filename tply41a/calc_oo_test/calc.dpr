@@ -14,7 +14,8 @@ uses
   lexdstr in '..\lexdstr.pas',
   IoUtils,
   Trackables in '..\..\..\..\Delphi XE Progs\Common\Tracking\Trackables.pas',
-  BinaryTree in '..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas';
+  BinaryTree in '..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas',
+  calc_oo_parse_debug in 'calc_oo_parse_debug.pas';
 
 var
   StrInput: string;

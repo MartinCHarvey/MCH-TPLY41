@@ -295,26 +295,30 @@ begin
     if not GetParams then
     begin
       Usage;
-      Exit;
+      halt(1);
     end;
     try
       Listing := TStringList.Create;
       StateDebugs := TList.Create;
       if not OpenFiles then
-        exit;
+        halt(1);
       if not CalcStateRefs then
-        exit;
+        halt(1);
       if not GenOutput then
-        exit;
+        halt(1);
     finally
       for i := 0 to Pred(StateDebugs.Count) do
         TObject(StateDebugs[i]).Free;
       StateDebugs.Free;
       Listing.Free;
       Close(OutFile);
+      halt(0);
     end;
   except
     on E: Exception do
+    begin
       Writeln(E.ClassName, ': ', E.Message);
+      halt(1);
+    end;
   end;
 end.
