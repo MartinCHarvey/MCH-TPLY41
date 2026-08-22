@@ -408,16 +408,16 @@ procedure TPLYLexer.yyless ( n : Integer );
   end(*yyless*);
 
 procedure TPLYLexer.reject;
-  var i, orig : Integer;
-  begin
-    yyreject := true;
-    Orig := Length(yytext);
-    SetLength(yytext, Length(yystext));
-    //This for loop might not copy if above actually truncates.
-    for i := Succ(orig) to Length(yystext) do
-      yytext[i] := get_char;
-    dec(yymatches);
-  end(*reject*);
+var
+  i: Integer;
+begin
+  yyreject := True;
+  // Put the rejected match back into the input stream.
+  for i := Length(yytext) downto 1 do
+    unget_char(yytext[i]);
+  // Discard this match from the match stack.
+  Dec(yymatches);
+end;
 
 procedure TPLYLexer.return ( n : Integer );
   begin
