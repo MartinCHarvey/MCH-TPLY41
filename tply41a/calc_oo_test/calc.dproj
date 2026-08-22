@@ -99,7 +99,6 @@
         <DCCReference Include="calc_oo_lex.pas"/>
         <DCCReference Include="..\lib_oo\yacclib_oo.pas"/>
         <DCCReference Include="..\lib_oo\lexlib_oo.pas"/>
-        <DCCReference Include="..\lexdstr.pas"/>
         <DCCReference Include="..\..\..\..\Delphi XE Progs\Common\Tracking\Trackables.pas"/>
         <DCCReference Include="..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas"/>
         <DCCReference Include="calc_oo_parse_debug.pas"/>

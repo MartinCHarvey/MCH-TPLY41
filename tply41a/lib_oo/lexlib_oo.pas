@@ -12,7 +12,6 @@ uses
 {$IFDEF USE_TRACKABLES}
   Trackables,
 {$ENDIF}
-  lexdstr,
   SysUtils,
   Classes;
 
@@ -50,20 +49,7 @@ uses
 const
   max_matches = 1024;
   max_rules   = 256;
-
-{
-  TODO - Check/Change usages of:
-
-  buf: Change to array of AnsiChar (0/1 based change).
-  yyline: Change to array of AnsiChar (0/1 based change).
-  yytext: Change to array of AnsiChar (0/1 based change).
-  yystext: Change to array of AnsiChar (0/1 based change).
-
-  Later.
-  _yytoken_text: AnsiString not supported by mobile, convert to unicode at this point.
-  _yyprev_token_text: AnsiString not supported by mobile, convert to unicode at this point.
-
-}
+  MAX_STRING_BUF_LEN = 1024 * 1024;
 
 type
   ETplyFatal = class(Exception);
@@ -82,21 +68,14 @@ type
     yydone     : Boolean; (* yylex return value set? *)
     yyretval   : Integer; (* yylex return value *)
 
-    _yytoken_text: AnsiString;
-    _yyprevtoken_text: AnsiString;
     bufptr : Integer;
-    buf    : ModeratelyLargeString;
+    buf    : AnsiString;
 
-    { TODO - Sort out nastiness of yyline,
-      yytext, yystext, buf, etc etc }
-
-    yystext            : ModeratelyLargeString;
+    yystext            : AnsiString;
     yysstate, yylstate : Integer;
     yymatches          : Integer;
     yystack            : array [1..max_matches] of Integer;
     yypos              : array [1..max_rules] of Integer;
-    yysleng            : Word;
-
 
     procedure yynew;
       (* starts next match; initializes state information of the lexical
@@ -126,16 +105,13 @@ type
       (* reinitializes state information after lexical analysis has been
          finished *)
 
-    function get_yytoken_text: AnsiString;
   public
     yyinput, yyoutput : TStream;        (* input and output file *)
-    yyline            : ModeratelyLargeString;      (* current input line *)
+    yyline            : AnsiString;      (* current input line *)
     yylineno, yycolno : Integer;     (* current input position *)
-    yytokenlineno, yytokencolno : Integer;     (* last token processed OK *)
-    yyprevtokenlineno, yyprevtokencolno : Integer;     (* previous token processed *)
-    yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
-    yyleng            : Word;         (* length of matched text *)
-    yytoken_overrun   : Boolean;
+    yyprevlineno, yyprevcolno : Integer;     (* previous token processed *)
+    yytext            : AnsiString;      (* matched text (should be considered r/o) *)
+    yyprevtext        : AnsiString;      (* previous matched text *)
     yywrapped         : Boolean;
 
     procedure YYOutWrite(const Msg:string);
@@ -221,10 +197,6 @@ type
     (* The following are the internal data structures and routines used by the
        lexical analyzer routine yylex; they should not be used directly. *)
 
-    function yytoken_text: AnsiString;
-    function yyprevtoken_text: AnsiString;
-    procedure update_token_text;
-
     function yylex: integer; virtual; abstract;
 
     procedure fatal ( msg : String ); virtual;
@@ -295,51 +267,9 @@ begin
     yyoutput.Read(UString[1], SLen);
     yyoutput.Seek(STot - SLen, soFromCurrent);
   end;
-  Line := UString;
+  Line := UTF8ToWideString(UString);
   result := yyoutput.Position < yyoutput.Size;
 end;
-
-function TPLYLexer.get_yytoken_text: AnsiString;
-var
-  StartPos: integer;
-  PToken: PAnsiChar;
-begin
-  //Need null terminator at end of buffer.
-  Assert(yyleng <= Pred(BIGGER_STRING_LEN));
-  StartPos := yyleng;
-  while (StartPos > 0) and (yytext[StartPos] <> #0) do
-    Dec(StartPos);
-  PToken := @yytext[Succ(StartPos)];
-  result := AnsiStrings.StrPas(PToken);
-  if yytoken_overrun then
-  begin
-    //OK, and now text is one char too long.
-    Delete(result, Length(result), 1);
-  end;
-end;
-
-procedure TPLYLexer.update_token_text;
-begin
-  _yyprevtoken_text := _yytoken_text;
-  _yytoken_text := get_yytoken_text;
-  yyprevtokenlineno := yytokenlineno;
-  yyprevtokencolno := yytokencolno;
-  yytokenlineno := yylineno;
-  yytokencolno := yycolno;
-  if yytoken_overrun and (yycolno > 0) then
-    Dec(yycolno);         { Assuming the error is not recognising cr/lf }
-end;
-
-function TPLYLexer.yytoken_text: AnsiString;
-begin
-  result := _yytoken_text;
-end;
-
-function TPLYLexer.yyprevtoken_text: AnsiString;
-begin
-  result := _yyprevtoken_text;
-end;
-
 
 procedure TPLYLexer.fatal ( msg : String );
   (* writes a fatal error message and halts program *)
@@ -363,7 +293,7 @@ function TPLYLexer.get_char : AnsiChar;
         SPos := yyinput.Position;
         SLen := 0;
         while (yyinput.Position < yyinput.Size)
-          and (SLen < Pred(BIGGER_STRING_LEN)) do
+          and (SLen < MAX_STRING_BUF_LEN) do
         begin
           yyinput.Read(Achr, sizeof(AChr));
           if (AChr <> #13) and (AChr <> #10) then
@@ -375,7 +305,7 @@ function TPLYLexer.get_char : AnsiChar;
           begin
             Inc(SLen);
             if (yyinput.Position < yyinput.Size)
-              and (SLen < Pred(BIGGER_STRING_LEN)) then
+              and (SLen < MAX_STRING_BUF_LEN) then
             begin
               yyinput.Read(AChr, sizeof(AChr));
               if AChr = #10 then
@@ -391,15 +321,19 @@ function TPLYLexer.get_char : AnsiChar;
             break;
           end;
         end;
+        //yyline contains entire line in order.
         yyinput.Seek(SPos, soFromBeginning);
-        FillChar(yyline, sizeof(yyline), 0);
+        SetLength(yyline, SLen);
         yyinput.Read(yyline[1], SLen);
 
         inc(yylineno); yycolno := 1;
+
+        //buf contains yyline reversed with #10 at start (i.e. end).
+        SetLength(buf, SLen + 1);
         buf[1] := nl;
         for i := 1 to SLen do
           buf[i+1] := yyline[SLen-i+1];
-        inc(bufptr, SLen+1);
+        bufptr := SLen + 1;
       end;
     if bufptr>0 then
       begin
@@ -413,7 +347,9 @@ function TPLYLexer.get_char : AnsiChar;
 
 procedure TPLYLexer.unget_char ( c : AnsiChar );
   begin
-    if bufptr >= Pred(BIGGER_STRING_LEN) then fatal('input buffer overflow');
+    if Length(buf) = bufptr then
+      SetLength(buf, Succ(bufPtr));
+    //Shouldn't have to grow if used properly, but avoid fatal error.
     inc(bufptr);
     dec(yycolno);
     buf[bufptr] := c;
@@ -426,7 +362,7 @@ procedure TPLYLexer.put_char ( c : AnsiChar );
     else if c=nl then
       YYOutWriteLn('')
     else
-      YYOutWrite(c);
+      YYOutWrite(UTF8ToWideString(c));
   end(*put_char*);
 
 (* Variables:
@@ -454,31 +390,32 @@ procedure TPLYLexer.put_char ( c : AnsiChar );
 procedure TPLYLexer.echo;
   var i : Integer;
   begin
-    for i := 1 to yyleng do
+    for i := 1 to Length(yytext) do
       put_char(yytext[i])
   end(*echo*);
 
 procedure TPLYLexer.yymore;
   begin
-    yystext := yytext;
-    yysleng := yyleng;
+    yystext := yytext; //Rely on later copy-on-write.
   end(*yymore*);
 
 procedure TPLYLexer.yyless ( n : Integer );
   var i : Integer;
   begin
-    for i := yyleng downto n+1 do
+    for i := Length(yytext) downto n+1 do
       unget_char(yytext[i]);
-    yyleng := n;
+    SetLength(yytext, n);
   end(*yyless*);
 
 procedure TPLYLexer.reject;
-  var i : Integer;
+  var i, orig : Integer;
   begin
     yyreject := true;
-    for i := yyleng+1 to yysleng do
+    Orig := Length(yytext);
+    SetLength(yytext, Length(yystext));
+    //This for loop might not copy if above actually truncates.
+    for i := Succ(orig) to Length(yystext) do
       yytext[i] := get_char;
-    yyleng := yysleng;
     dec(yymatches);
   end(*reject*);
 
@@ -513,33 +450,33 @@ function TPLYLexer.yywrap : Boolean;
 
 procedure TPLYLexer.yynew;
   begin
+    yyprevlineno := yylineno;
+    yyprevcolno := yycolno;
+    yyprevtext := yytext;
+
     if yylastchar<>#0 then
       if yylastchar=nl then
         yylstate := 1
       else
         yylstate := 0;
     yystate := yysstate+yylstate;
-    yytext  := yystext;
-    yyleng  := yysleng;
-
-    FillChar(yystext, 0, sizeof(yystext));
-    yysleng := 0;
+    yytext  := yystext; //Rely on later copy-on-write.
+    SetLength(yystext, 0);
     yymatches := 0;
     yydone := false;
   end(*yynew*);
 
 procedure TPLYLexer.yyscan;
   begin
-    if yyleng >= Pred(BIGGER_STRING_LEN) then fatal('yytext overflow');
+    SetLength(yytext, Succ(Length(yytext)));
     yyactchar := get_char;
-    inc(yyleng);
-    yytext[yyleng] := yyactchar;
+    yytext[Length(yytext)] := yyactchar;
   end(*yyscan*);
 
 procedure TPLYLexer.yymark ( n : Integer );
   begin
     if n>max_rules then fatal('too many rules');
-    yypos[n] := yyleng;
+    yypos[n] := Length(yytext);
   end(*yymark*);
 
 procedure TPLYLexer.yymatch ( n : Integer );
@@ -556,12 +493,11 @@ function TPLYLexer.yyfind ( var n : Integer ) : Boolean;
       dec(yymatches);
     if yymatches>0 then
       begin
-        yysleng := yyleng;
         n       := yystack[yymatches];
         yyless(yypos[n]);
         yypos[n] := 0;
-        if yyleng>0 then
-          yylastchar := yytext[yyleng]
+        if Length(yytext)>0 then
+          yylastchar := yytext[Length(yytext)]
         else
           yylastchar := #0;
         yyfind := true;
@@ -597,10 +533,8 @@ procedure TPLYLexer.yyclear;
     yysstate := 0;
     yylstate := 1;
     yylastchar := #0;
-    FillChar(yytext, sizeof(yytext), 0);
-    yystext := yytext;
-    yyleng := 0;
-    yysleng := 0;
+    SetLength(yytext, 0);
+    SetLength(yystext, 0);
   end(*yyclear*);
 
 constructor TPLYLexer.Create;
