@@ -65,7 +65,7 @@ calc_def_right  :
         ;
 
 ident           :
-                _ident                                  { lastIdent := Lexer.yytoken_text; }
+                _ident                                  { lastIdent := UTF8ToWideString(Lexer.yytoken_text); }
         ;
 
 calc_expression :

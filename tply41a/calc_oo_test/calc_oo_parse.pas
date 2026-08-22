@@ -81,7 +81,7 @@ begin
          yyval := yyv[yysp-1];
        end;
    8 : begin
-         lastIdent := Lexer.yytoken_text; 
+         lastIdent := UTF8ToWideString(Lexer.yytoken_text); 
        end;
    9 : begin
          yyval := yyv[yysp-0]; 

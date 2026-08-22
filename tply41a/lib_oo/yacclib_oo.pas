@@ -76,10 +76,10 @@ procedure TPLYParser.yyerror ( msg : String );
     //Could encounter error *after* yywrap, so streams left open.
     Lexer.YYOutWriteLn( ' Line: ' + IntToStr(Lexer.yytokenlineno) + CR_LF +
                         ' Col: ' + IntToStr(Lexer.yytokencolno) + CR_LF +
-                        ' Token: ''' + Lexer.yytoken_text + '''' + CR_LF +
+                        ' Token: ''' + UTF8ToWideString(Lexer.yytoken_text) + '''' + CR_LF +
                         ' PrevLine: ' + IntToStr(Lexer.yyprevtokenlineno) + CR_LF +
                         ' PrevCol: ' + IntToStr(Lexer.yyprevtokencolno) + CR_LF +
-                        ' PrevToken: ''' + Lexer.yyprevtoken_text + '''' + CR_LF);
+                        ' PrevToken: ''' + UTF8ToWideString(Lexer.yyprevtoken_text) + '''' + CR_LF);
   end(*yyerrmsg*);
 
 procedure TPLYParser.yyclearin;
