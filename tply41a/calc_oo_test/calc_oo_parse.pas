@@ -81,7 +81,7 @@ begin
          yyval := yyv[yysp-1];
        end;
    8 : begin
-         lastIdent := UTF8ToWideString(Lexer.yytoken_text); 
+         lastIdent := UTF8ToWideString(Lexer.yytext); 
        end;
    9 : begin
          yyval := yyv[yysp-0]; 
@@ -114,7 +114,7 @@ begin
          yyval := lookupLastIdent; 
        end;
   19 : begin
-         yyval := StrToInt(string(Lexer.yytoken_text)); 
+         yyval := StrToInt(string(Lexer.yytext)); 
        end;
   end;
 end(*yyaction*);

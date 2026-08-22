@@ -68,8 +68,6 @@ type
     yydone     : Boolean; (* yylex return value set? *)
     yyretval   : Integer; (* yylex return value *)
 
-    _yytoken_text: AnsiString;
-    _yyprevtoken_text: AnsiString;
     bufptr : Integer;
     buf    : AnsiString;
 
@@ -107,15 +105,13 @@ type
       (* reinitializes state information after lexical analysis has been
          finished *)
 
-    function get_yytoken_text: AnsiString;
   public
     yyinput, yyoutput : TStream;        (* input and output file *)
     yyline            : AnsiString;      (* current input line *)
     yylineno, yycolno : Integer;     (* current input position *)
-    yytokenlineno, yytokencolno : Integer;     (* last token processed OK *)
-    yyprevtokenlineno, yyprevtokencolno : Integer;     (* previous token processed *)
+    yyprevlineno, yyprevcolno : Integer;     (* previous token processed *)
     yytext            : AnsiString;      (* matched text (should be considered r/o) *)
-    yytoken_overrun   : Boolean;
+    yyprevtext        : AnsiString;      (* previous matched text *)
     yywrapped         : Boolean;
 
     procedure YYOutWrite(const Msg:string);
@@ -201,10 +197,6 @@ type
     (* The following are the internal data structures and routines used by the
        lexical analyzer routine yylex; they should not be used directly. *)
 
-    function yytoken_text: AnsiString;
-    function yyprevtoken_text: AnsiString;
-    procedure update_token_text;
-
     function yylex: integer; virtual; abstract;
 
     procedure fatal ( msg : String ); virtual;
@@ -278,44 +270,6 @@ begin
   Line := UTF8ToWideString(UString);
   result := yyoutput.Position < yyoutput.Size;
 end;
-
-function TPLYLexer.get_yytoken_text: AnsiString;
-var
-  StartPos: integer;
-  L: integer;
-begin
-  StartPos := Length(yytext);
-  while (StartPos > 1) and (yytext[StartPos] <> #0) do
-    Dec(StartPos);
-  if yytoken_overrun then
-    L := 0
-  else
-    L := 1;
-  Result := Copy(yytext, StartPos, Length(yytext) - StartPos + L);
-end;
-
-procedure TPLYLexer.update_token_text;
-begin
-  _yyprevtoken_text := _yytoken_text;
-  _yytoken_text := get_yytoken_text;
-  yyprevtokenlineno := yytokenlineno;
-  yyprevtokencolno := yytokencolno;
-  yytokenlineno := yylineno;
-  yytokencolno := yycolno;
-  if yytoken_overrun and (yycolno > 0) then
-    Dec(yycolno);         { Assuming the error is not recognising cr/lf }
-end;
-
-function TPLYLexer.yytoken_text: AnsiString;
-begin
-  result := _yytoken_text;
-end;
-
-function TPLYLexer.yyprevtoken_text: AnsiString;
-begin
-  result := _yyprevtoken_text;
-end;
-
 
 procedure TPLYLexer.fatal ( msg : String );
   (* writes a fatal error message and halts program *)
@@ -496,6 +450,10 @@ function TPLYLexer.yywrap : Boolean;
 
 procedure TPLYLexer.yynew;
   begin
+    yyprevlineno := yylineno;
+    yyprevcolno := yycolno;
+    yyprevtext := yytext;
+
     if yylastchar<>#0 then
       if yylastchar=nl then
         yylstate := 1
@@ -535,7 +493,6 @@ function TPLYLexer.yyfind ( var n : Integer ) : Boolean;
       dec(yymatches);
     if yymatches>0 then
       begin
-        SetLength(yystext, Length(yytext));
         n       := yystack[yymatches];
         yyless(yypos[n]);
         yypos[n] := 0;

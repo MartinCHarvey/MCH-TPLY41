@@ -65,7 +65,7 @@ calc_def_right  :
         ;
 
 ident           :
-                _ident                                  { lastIdent := UTF8ToWideString(Lexer.yytoken_text); }
+                _ident                                  { lastIdent := UTF8ToWideString(Lexer.yytext); }
         ;
 
 calc_expression :
@@ -87,7 +87,7 @@ calc_unary_expr :
         ;
 
 number          :
-                _number         { $$ := StrToInt(string(Lexer.yytoken_text)); }
+                _number         { $$ := StrToInt(string(Lexer.yytext)); }
         ;
 
 %%
