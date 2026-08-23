@@ -11,6 +11,9 @@ uses
 {$IFDEF USE_TRACKABLES}
   Trackables,
 {$ENDIF}
+{$IFDEF INCLYYSTYPE}
+  YYSType_incl,
+{$ENDIF}
   lexlib_oo;
 
 const yymaxdepth = 1024;
@@ -18,7 +21,9 @@ const yymaxdepth = 1024;
 
 
 type
+{$IFNDEF INCLYYSTYPE}
   YYSType = Integer;
+{$ENDIF}
   (* default value type, may be redefined in Yacc output file *)
 
 {$IFDEF USE_TRACKABLES}
