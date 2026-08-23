@@ -347,166 +347,135 @@ const
 
 function LookupOffsets(State: integer; var First: integer;var Last: integer): boolean;
 begin
+  result := true;
   case State of
     0: begin
       First := 1;
       Last := 20;
-      result := true;
     end;
     1: begin
       First := 21;
       Last := 26;
-      result := true;
     end;
     2: begin
       First := 27;
       Last := 32;
-      result := true;
     end;
     3: begin
       First := 33;
       Last := 47;
-      result := true;
     end;
     4: begin
       First := 48;
       Last := 60;
-      result := true;
     end;
     5: begin
       First := 61;
       Last := 77;
-      result := true;
     end;
     6: begin
       First := 78;
       Last := 83;
-      result := true;
     end;
     7: begin
       First := 84;
       Last := 94;
-      result := true;
     end;
     8: begin
       First := 95;
       Last := 113;
-      result := true;
     end;
     9: begin
       First := 114;
       Last := 120;
-      result := true;
     end;
     10: begin
       First := 121;
       Last := 126;
-      result := true;
     end;
     11: begin
       First := 127;
       Last := 135;
-      result := true;
     end;
     12: begin
       First := 136;
       Last := 151;
-      result := true;
     end;
     13: begin
       First := 152;
       Last := 157;
-      result := true;
     end;
     14: begin
       First := 158;
       Last := 171;
-      result := true;
     end;
     15: begin
       First := 172;
       Last := 185;
-      result := true;
     end;
     16: begin
       First := 186;
       Last := 191;
-      result := true;
     end;
     17: begin
       First := 192;
       Last := 197;
-      result := true;
     end;
     18: begin
       First := 198;
       Last := 203;
-      result := true;
     end;
     19: begin
       First := 204;
       Last := 214;
-      result := true;
     end;
     20: begin
       First := 215;
       Last := 229;
-      result := true;
     end;
     21: begin
       First := 230;
       Last := 244;
-      result := true;
     end;
     22: begin
       First := 245;
       Last := 250;
-      result := true;
     end;
     23: begin
       First := 251;
       Last := 261;
-      result := true;
     end;
     24: begin
       First := 262;
       Last := 267;
-      result := true;
     end;
     25: begin
       First := 268;
       Last := 278;
-      result := true;
     end;
     26: begin
       First := 279;
       Last := 284;
-      result := true;
     end;
     27: begin
       First := 285;
       Last := 290;
-      result := true;
     end;
     28: begin
       First := 291;
       Last := 296;
-      result := true;
     end;
     29: begin
       First := 297;
       Last := 311;
-      result := true;
     end;
     30: begin
       First := 312;
       Last := 326;
-      result := true;
     end;
     31: begin
       First := 327;
       Last := 332;
-      result := true;
     end;
   else
     First := -1; Last := -1;
