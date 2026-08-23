@@ -5,6 +5,7 @@ interface
 uses SysUtils, Classes;
 
 function GetStateDebug(state: integer):TStringList;
+function GetStateActionString(State: integer; Action:Integer): string;
 
 implementation
 
@@ -528,5 +529,32 @@ begin
     result := nil;
 end;
 
+function GetStateActionString(State: integer; Action:Integer): string;
+var
+  StateStrs: TStringList;
+  ActionMatch: string;
+  StatePos, ColonPos, i: integer;
+begin
+  StateStrs := GetStateDebug(State);
+  try
+    if Assigned(StateStrs) then
+    begin
+      ActionMatch := '(' + IntToStr(Action) + ')';
+      for i := 0 to Pred(StateStrs.Count) do
+      begin
+        StatePos := Pos(ActionMatch, StateStrs[i]);
+        ColonPos := Pos(':', StateStrs[i]);
+        if (StatePos > 0) and (ColonPos > 0) and (StatePos > ColonPos) then
+        begin
+          result := Trim(StateStrs[i]);
+          exit;
+        end;
+      end;
+    end;
+  finally
+    StateStrs.Free;
+  end;
+  SetLength(result, 0)
+end;
 end.
 

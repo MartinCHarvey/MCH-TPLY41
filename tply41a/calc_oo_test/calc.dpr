@@ -27,6 +27,7 @@ var
 begin
   try
     Parser := TCalcParser.Create;
+    Parser.yyactiondebug := true;
     try
       { TODO -oUser -cConsole Main : Insert code here }
       TmpName := IOUtils.TPath.GetTempFileName;
@@ -57,12 +58,12 @@ begin
       else
       begin
         WriteLn('Expression or parse bad:');
-        Parser.Lexer.yyoutput.Seek(0, soFromBeginning);
-        repeat
-          More := Parser.Lexer.YYOutReadLn(StrInput);
-          WriteLn(StrInput);
-        until not More;
       end;
+      Parser.Lexer.yyoutput.Seek(0, soFromBeginning);
+      repeat
+        More := Parser.Lexer.YYOutReadLn(StrInput);
+        WriteLn(StrInput);
+      until not More;
       DeleteFile(TmpName);
       DeleteFile(TmpOutName);
     finally

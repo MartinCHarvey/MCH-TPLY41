@@ -23,6 +23,7 @@ uses
 %classfunc  constructor Create;
 %classfunc  destructor Destroy; override;
 %classfunc  procedure yyerror ( msg : String ); override;
+%classfunc  procedure yyaction_debug(State: integer; Action: integer); override;
 
 %token
         _number
@@ -146,6 +147,17 @@ begin
       Lexer.YYOutWriteLn(Debug[i]);
     Debug.Free;
   end;
+end;
+
+procedure TCalcParser.yyaction_debug(State: integer; Action: integer);
+var
+  S: string;
+begin
+  if not (yydebug or yyactiondebug) then exit;
+  inherited;
+  S := GetStateActionString(State, Action);
+  if Length(S) > 0 then
+    Lexer.YYOutWriteLn(S);
 end;
 
 end.
