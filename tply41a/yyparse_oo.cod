@@ -16,8 +16,15 @@
 begin
   (* actions: *)
   yyaction_debug(yystate, yyruleno);
-  case yyruleno of
+  try
+    case yyruleno of
 %%
+    end;
+  except
+    on E:Exception do
+      yyerror('Exception: ' + E.Classname + ': ' + E.Message);
+    //Expect parser stack to potentially be garbage and use object
+    //trackers to clean up if need be./
   end;
 end(*yyaction*);
 

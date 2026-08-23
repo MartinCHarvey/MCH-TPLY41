@@ -60,7 +60,8 @@ procedure yyaction ( yyruleno : Integer );
 begin
   (* actions: *)
   yyaction_debug(yystate, yyruleno);
-  case yyruleno of
+  try
+    case yyruleno of
    1 : begin
          yyp_result := yyv[yysp-0]; 
        end;
@@ -118,6 +119,12 @@ begin
   19 : begin
          yyval := StrToInt(string(Lexer.yytext)); 
        end;
+    end;
+  except
+    on E:Exception do
+      yyerror('Exception: ' + E.Classname + ': ' + E.Message);
+    //Expect parser stack to potentially be garbage and use object
+    //trackers to clean up if need be./
   end;
 end(*yyaction*);
 
