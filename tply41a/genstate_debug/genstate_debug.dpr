@@ -77,6 +77,7 @@ begin
   WriteLn(OutFile);
   WriteLn(OutFile, 'function LookupOffsets(State: integer; var First: integer;var Last: integer): boolean;');
   WriteLn(OutFile, 'begin');
+  WriteLn(OutFile, '  result := true;');
   WriteLn(OutFile, '  case State of');
   for i := 0 to Pred(StateDebugs.Count) do
   begin
@@ -84,7 +85,6 @@ begin
     WriteLn(OutFile, '    ' + IntToStr (Ref.StateNumber) + ': begin');
     WriteLn(OutFile, '      First := ' + IntToStr(Ref.FirstLine) +';');
     WriteLn(OutFile, '      Last := ' + IntToStr(Ref.LastLine) +';');
-    WriteLn(OutFile, '      result := true;');
     WriteLn(OutFile, '    end;');
   end;
   WriteLn(OutFile, '  else');
