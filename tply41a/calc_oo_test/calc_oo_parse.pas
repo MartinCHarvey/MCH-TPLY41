@@ -48,6 +48,7 @@ type
       constructor Create;
       destructor Destroy; override;
       procedure yyerror ( msg : String ); override;
+      procedure yyaction_debug(State: integer; Action: integer); override;
 { oo_impl }
   end;
 
@@ -58,6 +59,7 @@ function TCalcParser.yyparse : Integer;
 procedure yyaction ( yyruleno : Integer );
 begin
   (* actions: *)
+  yyaction_debug(yystate, yyruleno);
   case yyruleno of
    1 : begin
          yyp_result := yyv[yysp-0]; 
@@ -584,7 +586,7 @@ next:
       yychar := Lexer.yylex; if yychar<0 then yychar := 0;
     end;
 
-  if yydebug then writeln('state ', yystate, ', char ', yychar);
+  if yydebug then Lexer.YYOutWriteLn('state ' + IntTostr(yystate) + ', char ' + IntToStr(yychar));
 
   (* determine parse action: *)
 
@@ -617,10 +619,10 @@ errlab:
         begin
           if yydebug then
             if yysp>1 then
-              writeln('error recovery pops state ', yys[yysp], ', uncovers ',
-                      yys[yysp-1])
+              Lexer.YYOutWriteLn('error recovery pops state ' + IntToStr(yys[yysp]) +
+                                 ', uncovers ' + IntToStr(yys[yysp-1]))
             else
-              writeln('error recovery fails ... abort');
+              Lexer.YYOutWriteLn('error recovery fails ... abort');
           dec(yysp);
         end;
       if yysp=0 then goto abort; (* parser has fallen from stack; abort *)
@@ -629,7 +631,7 @@ errlab:
     end
   else                                  (* no shift yet; discard symbol *)
     begin
-      if yydebug then writeln('error recovery discards char ', yychar);
+      if yydebug then Lexer.YYOutWriteLn('error recovery discards char ' + IntToStr(yychar));
       if yychar=0 then goto abort; (* end of input; abort *)
       yychar := -1; goto next;     (* clear lookahead char and try again *)
     end;
@@ -647,7 +649,7 @@ reduce:
 
   (* execute action, pop rule from stack, and go to next state: *)
 
-  if yydebug then writeln('reduce ', -yyn);
+  if yydebug then Lexer.YYOutWriteLn('reduce ' + InttoStr(-yyn));
 
   yyflag := yyfnone; yyaction(-yyn);
   dec(yysp, yyr[-yyn].len);
@@ -728,6 +730,17 @@ begin
       Lexer.YYOutWriteLn(Debug[i]);
     Debug.Free;
   end;
+end;
+
+procedure TCalcParser.yyaction_debug(State: integer; Action: integer);
+var
+  S: string;
+begin
+  if not (yydebug or yyactiondebug) then exit;
+  inherited;
+  S := GetStateActionString(State, Action);
+  if Length(S) > 0 then
+    Lexer.YYOutWriteLn(S);
 end;
 
 end.

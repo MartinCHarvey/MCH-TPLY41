@@ -36,6 +36,9 @@ type
     yynerrs  : Integer; (* current number of syntax errors reported by the
                            parser *)
     yydebug  : Boolean; (* set to true to enable debugging output of parser *)
+    yyactiondebug  : Boolean; (* set to true to enable debugging of actions only *)
+
+    procedure yyaction_debug(State: integer; Action: integer); virtual;
 
     procedure yyerror ( msg : String ); virtual;
       (* error message printing routine used by the parser *)
@@ -69,6 +72,13 @@ uses
 
 const
   CR_LF = #13 + #10;
+
+procedure TPLYParser.yyaction_debug(State: integer; Action: integer);
+begin
+  if yydebug or yyactiondebug then
+    Lexer.YYOutWriteLn('Performing action ' +
+                        IntToStr(Action) + ' in state ' +IntToStr(State));
+end;
 
 procedure TPLYParser.yyerror ( msg : String );
   begin
