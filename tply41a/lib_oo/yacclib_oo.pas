@@ -42,11 +42,15 @@ type
                            parser *)
     yydebug  : Boolean; (* set to true to enable debugging output of parser *)
     yyactiondebug  : Boolean; (* set to true to enable debugging of actions only *)
+    yyactioninfo   : Boolean;
 
     procedure yyaction_debug(State: integer; Action: integer); virtual;
 
     procedure yyerror ( msg : String ); virtual;
       (* error message printing routine used by the parser *)
+
+    procedure yyinfo( msg: string); virtual ;
+      (* another yyout printing routine dependent on info flag *)
 
     procedure yyclearin;
       (* delete the current lookahead token *)
@@ -83,6 +87,12 @@ begin
   if yydebug or yyactiondebug then
     Lexer.YYOutWriteLn('Performing action ' +
                         IntToStr(Action) + ' in state ' +IntToStr(State));
+end;
+
+procedure TPLYParser.yyinfo( msg: string);
+begin
+  if yyactioninfo then
+    Lexer.YYOutWriteLn('Info: ' + msg);
 end;
 
 procedure TPLYParser.yyerror ( msg : String );
