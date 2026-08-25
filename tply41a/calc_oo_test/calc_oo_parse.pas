@@ -57,6 +57,8 @@ implementation
 function TCalcParser.yyparse : Integer;
 
 procedure yyaction ( yyruleno : Integer );
+
+  { YYaction local vars here }
 begin
   (* actions: *)
   yyaction_debug(yystate, yyruleno);

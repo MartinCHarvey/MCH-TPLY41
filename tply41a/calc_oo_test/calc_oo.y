@@ -43,6 +43,10 @@ uses
 
 %%
 
+%{
+  { YYaction local vars here }
+%}
+
 calc_result     :
                 calc_definitions calc_expression        { yyp_result := $2; }
         |       calc_expression                         { yyp_result := $1; }
