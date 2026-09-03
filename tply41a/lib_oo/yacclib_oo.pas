@@ -92,7 +92,9 @@ end;
 procedure TPLYParser.yyinfo( msg: string);
 begin
   if yyactioninfo then
-    Lexer.YYOutWriteLn('Info: ' + msg);
+    Lexer.YYOutWriteLn(' Line: ' + IntToStr(Lexer.yylineno) + CR_LF +
+                       ' Col: ' + IntToStr(Lexer.yycolno) + CR_LF +
+                       ' Info: ' + msg + CR_LF );
 end;
 
 procedure TPLYParser.yyerror ( msg : String );

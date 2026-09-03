@@ -22,7 +22,11 @@ begin
     end;
   except
     on E:Exception do
-      yyerror('Exception: ' + E.Classname + ': ' + E.Message);
+      yyerror('Exception:' + #13 + #10
+              + ' State: ' + IntToStr(yyState) + #13 + #10
+              + ' Rule:  ' + IntToStr(yyRuleNo) + #13 + #10
+              + E.Classname + ': ' + #13 + #10
+              + E.Message);
     //Expect parser stack to potentially be garbage and use object
     //trackers to clean up if need be./
   end;
