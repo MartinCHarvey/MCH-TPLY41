@@ -53,6 +53,30 @@ var
   Ref: TStateRef;
 begin
   WriteLn(OutFile, 'unit ', OutUnitName, ';');
+  //Licence notice for the generated unit.
+  WriteLn(OutFile, '{');
+  WriteLn(OutFile);
+  WriteLn(OutFile, 'Copyright ' + #$00A9 + ' 2026 Martin Harvey <martin_c_harvey@hotmail.com>');
+  WriteLn(OutFile);
+  WriteLn(OutFile, 'Permission is hereby granted, free of charge, to any person obtaining a copy of');
+  WriteLn(OutFile, 'this software and associated documentation files (the "Software"), to deal in');
+  WriteLn(OutFile, 'the Software without restriction, including without limitation the rights to');
+  WriteLn(OutFile, 'use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies');
+  WriteLn(OutFile, 'of the Software, and to permit persons to whom the Software is furnished to do');
+  WriteLn(OutFile, 'so, subject to the following conditions:');
+  WriteLn(OutFile);
+  WriteLn(OutFile, 'The above copyright notice and this permission notice shall be included in');
+  WriteLn(OutFile, 'all copies or substantial portions of the Software.');
+  WriteLn(OutFile);
+  WriteLn(OutFile, 'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR');
+  WriteLn(OutFile, 'IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,');
+  WriteLn(OutFile, 'FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE');
+  WriteLn(OutFile, 'AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER');
+  WriteLn(OutFile, 'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING');
+  WriteLn(OutFile, 'FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS');
+  WriteLn(OutFile, 'IN THE SOFTWARE.');
+  WriteLn(OutFile);
+  WriteLn(OutFile, '}');
   WriteLn(OutFile);
   WriteLn(OutFile, 'interface');
   WriteLn(OutFile);
