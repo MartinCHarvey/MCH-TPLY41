@@ -5,7 +5,7 @@
         <FrameworkType>None</FrameworkType>
         <MainSource>calc.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Console</AppType>
@@ -45,6 +45,9 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <VerInfo_Locale>2057</VerInfo_Locale>
+        <Manifest_File>None</Manifest_File>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -70,10 +73,7 @@
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <Manifest_File>None</Manifest_File>
-        <VerInfo_Locale>2057</VerInfo_Locale>
-        <DCC_Define>DEBUG;USE_TRACKABLES;$(DCC_Define)</DCC_Define>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
@@ -98,7 +98,6 @@
         <DCCReference Include="calc_oo_lex.pas"/>
         <DCCReference Include="..\lib_oo\yacclib_oo.pas"/>
         <DCCReference Include="..\lib_oo\lexlib_oo.pas"/>
-        <DCCReference Include="..\..\..\..\Delphi XE Progs\Common\Tracking\Trackables.pas"/>
         <DCCReference Include="..\..\..\..\Delphi XE Progs\Common\Balanced Tree\BinaryTree.pas"/>
         <DCCReference Include="calc_oo_parse_debug.pas"/>
         <None Include="calc_oo.l"/>
