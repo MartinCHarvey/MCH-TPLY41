@@ -8,9 +8,6 @@ unit LexLib;
 
 interface
 
-uses
-  lexdstr;
-
 (* The Lex library unit supplies a collection of variables and routines
    needed by the lexical analyzer routine yylex and application programs
    using Lex-generated lexical analyzers. It also provides access to the
@@ -45,11 +42,14 @@ uses
 var
 
 yyinput, yyoutput : Text;        (* input and output file *)
-yyline            : ModeratelyLargeString;      (* current input line *)
+yyline            : AnsiString;  (* current input line *)
 yylineno, yycolno : Integer;     (* current input position *)
-yytext            : ModeratelyLargeString;      (* matched text (should be considered r/o) *)
-yyleng            : Word;         (* length of matched text *)
+yytext            : AnsiString;  (* matched text (should be considered r/o) *)
 yytoken_overrun   : Boolean;
+
+function yyleng : Integer;
+  (* length of matched text (now simply Length(yytext); kept as a function
+     so existing Lex programs that read yyleng still compile) *)
 
 (* I/O routines:
 
@@ -169,19 +169,19 @@ procedure yyclear;
 
 implementation
 
-uses
-  AnsiStrings;
+function yyleng : Integer;
+begin
+  result := Length(yytext);
+end;
 
 function yytoken_text: AnsiString;
 var
   StartPos: integer;
 begin
-  //Need null terminator at end of buffer.
-  Assert(yyleng <= Pred(BIGGER_STRING_LEN));
-  StartPos := yyleng;
+  StartPos := Length(yytext);
   while (StartPos > 0) and (yytext[StartPos] <> #0) do
     Dec(StartPos);
-  result := StrPas(@yytext[Succ(StartPos)]);
+  result := Copy(yytext, Succ(StartPos), Length(yytext) - StartPos);
   if yytoken_overrun then
   begin
     //OK, and now text is one char too long.
@@ -204,7 +204,7 @@ const nl = #10;  (* newline character *)
 var
 
 bufptr : Integer;
-buf    : ModeratelyLargeString;
+buf    : AnsiString;
 
 function get_char : AnsiChar;
   var i : Integer;
@@ -219,12 +219,9 @@ function get_char : AnsiChar;
         // and looking for lf chars.
         readln(yyinput, UniLine);
         SLen := Length(UniLine);
-        //Pred of bigger string len because we need a null terminator for subsequent
-        //processing.
-        if SLen > Pred(BIGGER_STRING_LEN) then
-            fatal('Line longer than 4k');
 
-        FillChar(yyline, sizeof(yyline), 0);
+        //yyline contains entire line in order.
+        SetLength(yyline, SLen);
         for i := 1 to SLen do
         begin
           if UniLine[i] <= High(AnsiChar) then
@@ -234,10 +231,13 @@ function get_char : AnsiChar;
         end;
 
         inc(yylineno); yycolno := 1;
+
+        //buf contains yyline reversed with #10 at start (i.e. end).
+        SetLength(buf, SLen + 1);
         buf[1] := nl;
         for i := 1 to SLen do
           buf[i+1] := yyline[SLen-i+1];
-        inc(bufptr, SLen+1);
+        bufptr := SLen + 1;
       end;
     if bufptr>0 then
       begin
@@ -251,7 +251,9 @@ function get_char : AnsiChar;
 
 procedure unget_char ( c : AnsiChar );
   begin
-    if bufptr >= Pred(BIGGER_STRING_LEN) then fatal('input buffer overflow');
+    if Length(buf) = bufptr then
+      SetLength(buf, Succ(bufptr));
+    //Shouldn't have to grow if used properly, but avoid fatal error.
     inc(bufptr);
     dec(yycolno);
     buf[bufptr] := c;
@@ -283,8 +285,8 @@ procedure put_char ( c : AnsiChar );
      matches
    - yypos: for each rule the last marked position (yymark); zeroed when rule
      has already been considered
-   - yysleng: copy of the original yyleng used to restore state information
-     when reject is used *)
+   - yysleng: copy of the original length of yytext used to restore state
+     information when reject is used *)
 
 const
 
@@ -293,43 +295,41 @@ max_rules   = 256;
 
 var
 
-yystext            : ModeratelyLargeString;
+yystext            : AnsiString;
 yysstate, yylstate : Integer;
 yymatches          : Integer;
 yystack            : array [1..max_matches] of Integer;
 yypos              : array [1..max_rules] of Integer;
-yysleng            : Word;
+yysleng            : Integer;
 
 (* Utilities: *)
 
 procedure echo;
   var i : Integer;
   begin
-    for i := 1 to yyleng do
+    for i := 1 to Length(yytext) do
       put_char(yytext[i])
   end(*echo*);
 
 procedure yymore;
   begin
-    yystext := yytext;
-    yysleng := yyleng;
+    yystext := yytext; //Rely on later copy-on-write.
   end(*yymore*);
 
 procedure yyless ( n : Integer );
   var i : Integer;
   begin
-    for i := yyleng downto n+1 do
+    for i := Length(yytext) downto n+1 do
       unget_char(yytext[i]);
-    yyleng := n;
+    SetLength(yytext, n);
   end(*yyless*);
 
 procedure reject;
   var i : Integer;
   begin
     yyreject := true;
-    for i := yyleng+1 to yysleng do
-      yytext[i] := get_char;
-    yyleng := yysleng;
+    for i := Length(yytext)+1 to yysleng do
+      yytext := yytext + get_char;
     dec(yymatches);
   end(*reject*);
 
@@ -368,27 +368,22 @@ procedure yynew;
       else
         yylstate := 0;
     yystate := yysstate+yylstate;
-    yytext  := yystext;
-    yyleng  := yysleng;
-
-    FillChar(yystext, 0, sizeof(yystext));
-    yysleng := 0;
+    yytext  := yystext; //Rely on later copy-on-write.
+    SetLength(yystext, 0);
     yymatches := 0;
     yydone := false;
   end(*yynew*);
 
 procedure yyscan;
   begin
-    if yyleng >= Pred(BIGGER_STRING_LEN) then fatal('yytext overflow');
     yyactchar := get_char;
-    inc(yyleng);
-    yytext[yyleng] := yyactchar;
+    yytext := yytext + yyactchar;
   end(*yyscan*);
 
 procedure yymark ( n : Integer );
   begin
     if n>max_rules then fatal('too many rules');
-    yypos[n] := yyleng;
+    yypos[n] := Length(yytext);
   end(*yymark*);
 
 procedure yymatch ( n : Integer );
@@ -405,12 +400,12 @@ function yyfind ( var n : Integer ) : Boolean;
       dec(yymatches);
     if yymatches>0 then
       begin
-        yysleng := yyleng;
+        yysleng := Length(yytext);
         n       := yystack[yymatches];
         yyless(yypos[n]);
         yypos[n] := 0;
-        if yyleng>0 then
-          yylastchar := yytext[yyleng]
+        if Length(yytext)>0 then
+          yylastchar := yytext[Length(yytext)]
         else
           yylastchar := #0;
         yyfind := true;
@@ -446,9 +441,8 @@ procedure yyclear;
     yysstate := 0;
     yylstate := 1;
     yylastchar := #0;
-    FillChar(yytext, sizeof(yytext), 0);
-    yystext := yytext;
-    yyleng := 0;
+    SetLength(yytext, 0);
+    SetLength(yystext, 0);
     yysleng := 0;
   end(*yyclear*);
 

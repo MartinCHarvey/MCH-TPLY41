@@ -43,7 +43,7 @@ unit LexRules;
 
 interface
 
-uses LexBase, LexTable, lexdstr;
+uses LexBase, LexTable;
 
 
 procedure parse_rule ( rule_no : Integer );
@@ -90,12 +90,17 @@ uses LexMsgs;
    act_pos will point to the position of the original macro call in the
    source line. This is needed to give proper error diagnostics. *)
 
+const
+
+MAX_MACRO_BUF_LEN = 1024 * 1024;
+  (* upper limit on the input stack (catches runaway recursive macros) *)
+
 var
 
 act_pos, bufptr : Integer;
   (* current position in source line and input stack pointer *)
-buf : ModeratelyLargeString;
-  (* input buffer *)
+buf : AnsiString;
+  (* input buffer (grown on demand by put_str) *)
 str_state, cclass_state, quote_state : Boolean;
   (* state information *)
 n_macros : Integer;
@@ -116,7 +121,9 @@ procedure put_str(str : String);
   var i : Integer;
   begin
     inc(bufptr, length(str));
-    if bufptr> Pred(BIGGER_STRING_LEN) then fatal(macro_stack_overflow);
+    if bufptr > MAX_MACRO_BUF_LEN then fatal(macro_stack_overflow);
+    if bufptr > Length(buf) then
+      SetLength(buf, bufptr);
     for i := 1 to length(str) do
     begin
       if Ord(str[i]) > Ord(High(AnsiChar)) then
