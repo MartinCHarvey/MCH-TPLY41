@@ -289,6 +289,11 @@ begin
   i := Listing.Count;
   if Assigned(CurRef) then
     CloseRef;
+  //Last line sometimes contains conflict summary, remove it.
+  CurRef := StateDebugs.Items[Pred(StateDebugs.Count)];
+  while (CurRef.LastLine > CurRef.FirstLine)
+    and (Listing[CurRef.LastLine].Contains('conflicts.')) do
+    Dec(CurRef.LastLine);
   StateDebugs.Sort(StateDebugsSort);
   result := CheckStateDebugs;
 end;
